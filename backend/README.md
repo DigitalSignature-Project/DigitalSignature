@@ -7,7 +7,11 @@
 - `. .venv/Scripts/activate`
 - `pip install -r requirements.txt`
 
-3. Application backend has been installed correctly, you can now move back and run app: [Main manual](../README.md).
+3. Enter into `./backend/app/computing`
+
+- Run script: `python build_pyd.py`
+
+4. Application backend has been installed correctly, you can now move back and run app: [Main manual](../README.md).
 
 ### Tips
 
