@@ -1,0 +1,118 @@
+# Byte-compiled / optimized / DLL files
+
+**pycache**/
+*.py[cod]
+*$py.class
+
+# C extensions
+
+*.so
+*.pyd
+*.dll
+
+# Distribution / packaging
+
+.Python
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+
+*.manifest
+*.spec
+
+# Installer logs
+
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage
+
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+pytest_cache/
+nosetests.xml
+coverage.xml
+
+# Type checkers
+
+.mypy_cache/
+.pyre/
+.pytype/
+
+# Jupyter Notebook
+
+.ipynb_checkpoints
+
+# Environments
+
+.venv/
+venv/
+env/
+ENV/
+
+# VS Code
+
+.vscode/
+
+# PyCharm
+
+.idea/
+
+# macOS
+
+.DS_Store
+
+# Windows
+
+Thumbs.db
+
+# Logs
+
+*.log
+
+# dotenv
+
+.env
+.env.*
+
+# Build (C/C++ / pybind11)
+
+*.o
+*.obj
+*.exe
+*.out
+
+# CMake
+
+CMakeFiles/
+CMakeCache.txt
+cmake-build-*/
+
+# Node (jeśli masz frontend jak u Ciebie)
+
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+
+*.tmp
+*.temp
