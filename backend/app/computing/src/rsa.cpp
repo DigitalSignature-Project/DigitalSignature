@@ -120,7 +120,7 @@ PYBIND11_MODULE(generate_rsa_key, m) {
         .def_readwrite("limbs", &digisign::BigInt::limbs)
         .def_readwrite("used", &digisign::BigInt::used);
     m.def("rsa_generate_keys", &digisign::RSA_generate_keys, "rsa_generate_keys");
-    m.def("RSA_generate_keys_parallel", &digisign::RSA_generate_keys_parallel, pybind11::call_guard<pybind11::gil_scoped_release>(), "RSA_generate_keys_parallel");
+    m.def("rsa_generate_keys_parallel", &digisign::RSA_generate_keys_parallel, pybind11::call_guard<pybind11::gil_scoped_release>(), "rsa_generate_keys_parallel");
     m.def("encrypt", &digisign::encrypt, "encrypt");
     m.def("decrypt", &digisign::decrypt, "decrypt");
 }

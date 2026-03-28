@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import spa_endp as spa_router
-from app.routers import bmi_endp as bmi_router
+from app.routers import crypto_endp as crypto_router
 
 app = FastAPI()
 
@@ -24,4 +24,4 @@ app.mount(
 
 
 app.include_router(spa_router.router)
-app.include_router(bmi_router.router, prefix="/api")
+app.include_router(crypto_router.router, prefix="/api")
