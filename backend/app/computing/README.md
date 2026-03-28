@@ -5,13 +5,13 @@
 3. Enter into `C:/`
 4. Run following commands:
 
+- `export PATH="/c/Program Files/CMake/bin:$PATH"`
 - `git clone https://github.com/microsoft/vcpkg.git`
 - `cd vcpkg`
 - `bootstrap-vcpkg.bat`
-- `vcpkg install cmake`
 - `vcpkg install libffi:x64-windows`
 - `vcpkg install openssl:x64-windows-static`
-- `vcpkg install pybind11`
+- `vcpkg install pybind11:x64-windows-static`
 
 5. After installation process compile C++ files using folowing commands:
 

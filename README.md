@@ -16,8 +16,10 @@ Application for creating a digital signature
 
 4. Download Node.js from: `https://nodejs.org/en/download`.
 
-5. Install all dependencies for application frontend. For more details check this manual: [Frontend manual](frontend/README.md)
+5. Download CMake from: `https://cmake.org/download/`.
 
-6. Install all dependencies for application backend. For more details check this manual: [Backend manual](backend/README.md)
+6. Install all dependencies for application frontend. For more details check this manual: [Frontend manual](frontend/README.md)
 
-7. After installation process you can finally run dev app version using following command (you must first activate the Python virtual environment): `python run_app.py`
+7. Install all dependencies for application backend. For more details check this manual: [Backend manual](backend/README.md)
+
+8. After installation process you can finally run dev app version using following command (you must first activate the Python virtual environment): `python run_app.py`
