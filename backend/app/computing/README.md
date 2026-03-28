@@ -16,6 +16,7 @@
 5. After installation process compile C++ files using folowing commands:
 
 - Enter into `./app/backend/computing`
+- Delete `./build` directory.
 - `cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static`
 - `cmake --build build`
 
