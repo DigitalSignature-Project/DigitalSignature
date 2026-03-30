@@ -8,7 +8,7 @@ type RsaResponse = {
 
 export const calculateRsa = async (bits: number) => {
   const { data } = await axios.post<RsaResponse>(
-    "http://127.0.0.1:8000/api/rsa_generate_keys",
+    "http://127.0.0.1:2138/api/rsa_generate_keys",
     { bits },
     {
       headers: {
@@ -21,7 +21,7 @@ export const calculateRsa = async (bits: number) => {
 
 export const calculateRsaParallel = async (bits: number, threads: number) => {
   const { data } = await axios.post<RsaResponse>(
-    "http://127.0.0.1:8000/api/rsa_generate_keys_parallel",
+    "http://127.0.0.1:2138/api/rsa_generate_keys_parallel",
     { bits, threads },
     {
       headers: {
