@@ -1,6 +1,6 @@
-from fastapi import APIRouter
-import time
+from fastapi import APIRouter, Depends
 
+from app.auth import verify_token
 from app.computing.build.Debug import generate_rsa_key
 
 from app.schemas.crypto_shemas import (
@@ -10,7 +10,9 @@ from app.schemas.crypto_shemas import (
     RsaKeyParallel,
 )
 
-router = APIRouter()
+router = APIRouter(
+    dependencies=[Depends(verify_token)]
+)
 
 
 @router.post("/rsa_generate_keys", response_model=RsaKeyResponse)

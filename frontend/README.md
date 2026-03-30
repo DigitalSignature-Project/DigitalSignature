@@ -8,6 +8,7 @@
 - `npm install tailwindcss @tailwindcss/vite `
 - `npm i -D daisyui@latest`
 - `npm install --save-dev @tauri-apps/cli`
+- `npm install axios`
 
 3. Build frontend:
 

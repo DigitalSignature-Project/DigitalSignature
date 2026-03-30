@@ -1,9 +1,14 @@
 from pathlib import Path
 
-from fastapi import Request, APIRouter
+from fastapi import Request, APIRouter, Depends
 from fastapi.responses import FileResponse
 
-router = APIRouter()
+from app.auth import verify_token
+
+router = APIRouter(
+    dependencies=[Depends(verify_token)]
+)
+
 
 BASE_DIR = Path(__file__).resolve()
 frontend_path = BASE_DIR.parents[3] / "frontend" / "dist"

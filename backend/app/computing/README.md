@@ -1,6 +1,6 @@
 # Set up for developers (Computing module)
 
-1. Enter into `./app/backend/computing`
+1. Enter into `./backend/app/computing`
 2. Run CMD as admistrator.
 3. Enter into `C:/`
 4. Run following commands:
@@ -15,7 +15,7 @@
 
 5. After installation process compile C++ files using folowing commands:
 
-- Enter into `./app/backend/computing`
+- Enter into `./backend/app/computing`
 - Delete `./build` directory.
 - `cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static`
 - `cmake --build build`
