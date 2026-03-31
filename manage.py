@@ -181,7 +181,6 @@ def build_project():
     print_success("Build process completed successfully!")
 
 def run_project():
-    """Nowa funkcja do uruchamiania aplikacji z poprawnego środowiska."""
     print_step("Starting the application...")
     
     is_windows = platform.system() == "Windows"
