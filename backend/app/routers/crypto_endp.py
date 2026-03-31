@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.auth import verify_token
-from app.computing.build.Debug import generate_rsa_key
-
+from app.computing.build.Release import generate_rsa_key
 from app.schemas.crypto_shemas import (
     RsaKeyResponse,
     RsaKeyParallelResponse,
