@@ -190,14 +190,12 @@ def run_project():
     if not python_exe.exists():
         print_error("Virtual environment not found! Please run 'python manage.py setup' first.")
         
-    # Zakładam, że Twój główny plik nazywa się run_app.py zgodnie z poprzednimi logami
     app_script = "run_app.py"
     if not Path(app_script).exists():
         print_error(f"Cannot find the entry point: {app_script}")
         
     print(f"{Colors.OKGREEN}Running {app_script}... (Press CTRL+C to quit){Colors.ENDC}\n")
     try:
-        # Uruchamiamy serwer bezpośrednio z .venv bez konieczności jego ręcznej aktywacji
         subprocess.run([str(python_exe), app_script])
     except KeyboardInterrupt:
         print(f"\n{Colors.WARNING}Application stopped by user.{Colors.ENDC}")
