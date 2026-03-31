@@ -1,8 +1,3 @@
-
-Sprawdzić czy działa!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
 # DigitalSignature
 
 Application for creating a digital signature
