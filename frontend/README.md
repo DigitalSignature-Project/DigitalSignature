@@ -9,6 +9,8 @@
 - `npm i -D daisyui@latest`
 - `npm install --save-dev @tauri-apps/cli`
 - `npm install axios`
+- `npm install react-router-dom lucide-react`
+- `npm install -D @types/react-router-dom`
 
 3. Build frontend:
 
