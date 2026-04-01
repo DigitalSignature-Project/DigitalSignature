@@ -1,37 +1,21 @@
-import type { JSX } from "react";
-import { useState } from "react";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Layout from './Layout';
+import EncryptPage from './EncryptPage';
 
-import { RsaBtn, RsaParallelBtn } from "./components/BmiButton";
-import { BmiHeader } from "./components/BmiHeader";
-import { BmiResult } from "./components/BmiResult";
-import { BmiInputs } from "./components/BmiInputs";
 
-import { calculateRsa, calculateRsaParallel } from "./services/rsaAPI";
-
-export const App = (): JSX.Element => {
-  const [clicked, setClicked] = useState<boolean>(false);
-  const [bmi, setBmi] = useState<string>("BMI");
-  const [bits, setBits] = useState<number>(1024);
-  const threads: number = 4;
-
-  const calculateRsaHandler = async () => {
-    setClicked(!clicked);
-    const data = await calculateRsa(bits);
-    setBmi(`Na jednym watku: ${data.key_pub}`);
-  };
-
-  const calculateRsaParallelHandler = async () => {
-    const data = await calculateRsaParallel(bits, threads);
-    setBmi(`Na 4 watkach: ${data.key_pub}`);
-  };
-
+const App = () => {
   return (
-    <>
-      <BmiHeader />
-      <BmiInputs bits={bits} setBits={setBits} />
-      <RsaBtn onClick={calculateRsaHandler} clicked={clicked} />
-      <RsaParallelBtn onClick={calculateRsaParallelHandler} />
-      <BmiResult bmi={bmi} />
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<div className="text-2xl font-bold text-slate-800">This will be the Dashboard</div>} />
+          <Route path="encrypt" element={<EncryptPage />} />
+          <Route path="verify" element={<div className="text-2xl font-bold text-slate-800">Verification will be here</div>} />
+          <Route path="settings" element={<div className="text-2xl font-bold text-slate-800">Settings will be here</div>} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 };
+
+export default App;
