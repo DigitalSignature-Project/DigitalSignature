@@ -1,4 +1,3 @@
-import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { Home, Lock, ShieldCheck, Settings, Bell, User, Shield } from 'lucide-react';
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Plus, FileText, Lock } from 'lucide-react';
 
 const EncryptPage = () => {
