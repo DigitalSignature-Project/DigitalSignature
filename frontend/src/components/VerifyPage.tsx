@@ -1,4 +1,4 @@
-import { FileText, Check } from "lucide-react";
+import { FileText, Check, ShieldAlert } from "lucide-react";
 
 const GradientCheck = () => (
   <svg className="w-40 h-40" viewBox="0 0 24 24" fill="none" strokeWidth={2}>
@@ -43,72 +43,51 @@ const VerifyPage = () => {
             </span>
           </div>
         </div>
-      </div>
 
-      <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center">
-        <div className="flex items-center space-x-3">
-          <label>
-            <input
-              type="text"
-              name=""
-              id=""
-              placeholder="Enter public key"
-              className="
-    w-full
-    px-8 py-3
-    rounded-xl
-    border border-slate-200
-    shadow-md
-    text-[#0f172a]
-    placeholder-slate-400
-    focus:outline-none
-    focus:ring-2 focus:ring-[#1e40af]
-    focus:border-[#1e40af]
-    transition-all
-  "
-            />
-          </label>
-          <label>
-            <input
-              type="text"
-              name=""
-              id=""
-              placeholder="Enter signature"
-              className="
-    w-full
-    px-8 py-3
-    rounded-xl
-    border border-slate-200
-    shadow-md
-    text-[#0f172a]
-    placeholder-slate-400
-    focus:outline-none
-    focus:ring-2 focus:ring-[#1e40af]
-    focus:border-[#1e40af]
-    transition-all
-  "
-            />
-          </label>
-        </div>
+        <div className="w-120 bg-slate-200 rounded-full h-0.5 mt-6"></div>
 
         <button
           type="button"
-          className="bg-[#1e40af] hover:bg-[#1e3a8a] text-white px-8 py-3 rounded-xl font-semibold shadow-md transition-colors cursor-pointer mt-3"
+          className="
+    bg-[#1e40af] hover:bg-[#1e3a8a]
+    active:scale-95
+    active:shadow-sm
+    text-white px-8 py-3 rounded-xl font-semibold
+    shadow-md transition-all duration-150
+    cursor-pointer mt-8
+  "
         >
           Verify signature
         </button>
       </div>
 
-      <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center">
-        <span className="text-[#0f172a] font-medium">
-          Signed by: Jan Kowalski (jan.kowalski@firma.pl)
-        </span>
-        <span className="text-[#0f172a] font-medium">
-          ID certificate: A1B2-C3D4-E5F6
-        </span>
-        <span className="text-[#0f172a] font-medium">
-          Date of signature: 02.04.2026, 11:32 AM
-        </span>
+      <div
+        className="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 
+                flex flex-col justify-center 
+                w-full mx-auto text-left"
+      >
+        <div className="max-w-xl mx-auto text-left flex flex-col">
+          <span className="text-[#0f172a] font-medium">
+            Signed by: Jan Kowalski (jan.kowalski@firma.pl)
+          </span>
+          <span className="text-[#0f172a] font-medium mt-1">
+            ID certificate: A1B2-C3D4-E5F6
+          </span>
+          <span className="text-[#0f172a] font-medium mt-1">
+            Date of signature: 02.04.2026, 11:32 AM
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-6 justify-center">
+        <ShieldAlert className="w-20 h-20 text-[#0f172a] mt-2" />
+
+        <div>
+          <span className="text-[#0f172a] font-bold">Warning: </span>
+          <span className="text-[#0f172a] font-medium">
+            file has not been changed since it was signed
+          </span>
+        </div>
       </div>
     </div>
   );
