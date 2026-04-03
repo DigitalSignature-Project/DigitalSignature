@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import EncryptPage from "./components/EncryptPage";
+import VerifyPage from "./components/VerifyPage";
 
 const App = () => {
   return (
@@ -16,14 +17,7 @@ const App = () => {
             }
           />
           <Route path="encrypt" element={<EncryptPage />} />
-          <Route
-            path="verify"
-            element={
-              <div className="text-2xl font-bold text-slate-800">
-                Verification will be here
-              </div>
-            }
-          />
+          <Route path="verify" element={<VerifyPage />} />
           <Route
             path="settings"
             element={
