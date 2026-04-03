@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "test",
+  "productName": "Digital Signature",
   "version": "0.1.0",
   "identifier": "com.digital.signature",
   "build": {
@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "test",
-        "width": 800,
-        "height": 600,
+        "title": "Digital Signature",
+        "width": 1000,
+        "height": 800,
         "resizable": true,
         "fullscreen": false
       }
