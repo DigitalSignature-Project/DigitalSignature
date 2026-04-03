@@ -15,15 +15,15 @@ const GradientCheck = () => (
 const VerifyPage = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      <p className="font-bold text-[#0f172a] text-4xl text-center">
+      <p className="font-bold text-[#0f172a] text-4xl text-center mt-2">
         Digital signature verification
       </p>
 
       <div className="flex items-center space-x-6 justify-center">
-        <FileText className="w-20 h-20 text-[#0f172a]" />
+        <FileText className="w-20 h-20 text-[#0f172a] mt-2" />
 
         <div className="flex flex-col">
-          <span className="text-[#0f172a] text-2xl font-medium">
+          <span className="text-[#0f172a] text-2xl font-medium mt-2">
             Document_title.pdf
           </span>
           <span className="text-[#0f172a] text-2xl">(3.4MB)</span>
@@ -31,23 +31,82 @@ const VerifyPage = () => {
       </div>
 
       <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center">
-        <GradientCheck />
-        <span className="text-[#0f172a] font-bold text-4xl">
-          Signature correct
-        </span>
-        <span className="text-[#0f172a] text-2xl">
-          File verified successfully
-        </span>
+        <div className="flex items-center space-x-6 justifi-center">
+          <GradientCheck />
+
+          <div className="flex flex-col">
+            <span className="text-[#0f172a] font-bold text-4xl">
+              Signature correct
+            </span>
+            <span className="text-[#0f172a] text-2xl text-center mt-3">
+              File verified successfully
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center">
-        <span className="text-[#0f172a] text-1xl">
+        <div className="flex items-center space-x-3">
+          <label>
+            <input
+              type="text"
+              name=""
+              id=""
+              placeholder="Enter public key"
+              className="
+    w-full
+    px-8 py-3
+    rounded-xl
+    border border-slate-200
+    shadow-md
+    text-[#0f172a]
+    placeholder-slate-400
+    focus:outline-none
+    focus:ring-2 focus:ring-[#1e40af]
+    focus:border-[#1e40af]
+    transition-all
+  "
+            />
+          </label>
+          <label>
+            <input
+              type="text"
+              name=""
+              id=""
+              placeholder="Enter signature"
+              className="
+    w-full
+    px-8 py-3
+    rounded-xl
+    border border-slate-200
+    shadow-md
+    text-[#0f172a]
+    placeholder-slate-400
+    focus:outline-none
+    focus:ring-2 focus:ring-[#1e40af]
+    focus:border-[#1e40af]
+    transition-all
+  "
+            />
+          </label>
+        </div>
+
+        <button
+          type="button"
+          className="bg-[#1e40af] hover:bg-[#1e3a8a] text-white px-8 py-3 rounded-xl font-semibold shadow-md transition-colors cursor-pointer mt-3"
+        >
+          Verify signature
+        </button>
+      </div>
+
+      <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center">
+        <span className="text-[#0f172a] font-medium">
           Signed by: Jan Kowalski (jan.kowalski@firma.pl)
         </span>
-        <span className="text-[#0f172a] text-1xl">
+        <span className="text-[#0f172a] font-medium">
           ID certificate: A1B2-C3D4-E5F6
         </span>
-        <span className="text-[#0f172a] text-1xl">
+        <span className="text-[#0f172a] font-medium">
           Date of signature: 02.04.2026, 11:32 AM
         </span>
       </div>
