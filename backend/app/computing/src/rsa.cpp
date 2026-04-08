@@ -2,8 +2,6 @@
 #include <digisign/rng.h>
 #include <digisign/prime.h>
 #include <digisign/mod_arith.h>
-#include <pybind11/stl.h>
-#include <pybind11/pybind11.h>
 
 namespace digisign {
 
@@ -70,8 +68,8 @@ void RSA_generate_keys_parallel(BigInt& key_pub, BigInt& key_priv, BigInt& n, in
     key_priv = x;
 }
 
-BigInt encrypt(uint64_t message, const BigInt& pub_key, const BigInt& n) {
-    BigInt encrypted_message = BigInt::uint64(message);
+BigInt encrypt(const BigInt& message, const BigInt& pub_key, const BigInt& n) {
+    BigInt encrypted_message = message;
 
     size_t n_limbs = n.used;
 
@@ -91,7 +89,7 @@ BigInt encrypt(uint64_t message, const BigInt& pub_key, const BigInt& n) {
     return montgomery_mod_pow(encrypted_message, pub_key, n, w, table, R2, n0_inv);
 }
 
-uint64_t decrypt(BigInt& encrypted_message, const BigInt& priv_key, const BigInt& n) {
+BigInt decrypt(const BigInt& encrypted_message, const BigInt& priv_key, const BigInt& n) {
     BigInt message = encrypted_message;
 
     size_t n_limbs = n.used;
@@ -109,18 +107,8 @@ uint64_t decrypt(BigInt& encrypted_message, const BigInt& priv_key, const BigInt
 
     uint64_t n0_inv = n_inv(n, 6);
 
-    return montgomery_mod_pow(message, priv_key, n, w, table, R2, n0_inv).limbs[0];
+    return montgomery_mod_pow(message, priv_key, n, w, table, R2, n0_inv);
 }
 
 }
 
-PYBIND11_MODULE(generate_rsa_key, m) {
-        pybind11::class_<digisign::BigInt>(m, "BigInt")
-        .def(pybind11::init<>())
-        .def_readwrite("limbs", &digisign::BigInt::limbs)
-        .def_readwrite("used", &digisign::BigInt::used);
-    m.def("rsa_generate_keys", &digisign::RSA_generate_keys, "rsa_generate_keys");
-    m.def("rsa_generate_keys_parallel", &digisign::RSA_generate_keys_parallel, pybind11::call_guard<pybind11::gil_scoped_release>(), "rsa_generate_keys_parallel");
-    m.def("encrypt", &digisign::encrypt, "encrypt");
-    m.def("decrypt", &digisign::decrypt, "decrypt");
-}

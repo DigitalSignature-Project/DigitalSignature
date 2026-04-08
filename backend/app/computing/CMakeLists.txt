@@ -19,6 +19,10 @@ pybind11_add_module(generate_rsa_key
     src/prime.cpp
     src/mod_arith.cpp
     src/BigInt.cpp
+    src/format.cpp
+    src/pss.cpp
+    src/sha256.cpp
+    src/pybind.cpp
 )
 
 # include

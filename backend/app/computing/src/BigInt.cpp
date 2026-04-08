@@ -1,5 +1,8 @@
 #include <digisign/BigInt.h>
+#include <digisign/format.h>
 #include <stdexcept>
+#include <sstream>
+#include <iomanip>
 
 namespace digisign {
 
@@ -23,6 +26,27 @@ BigInt BigInt::uint64(uint64_t v)
     return r;
 }
 
+BigInt BigInt::vectoruint8(const std::vector<uint8_t>& v)
+{
+    size_t limbCount = (v.size() + 7) / 8;
+    BigInt r(limbCount * 64);
+
+    for (size_t i = 0; i < limbCount; i++) {
+        uint64_t limb = 0;
+
+        for (size_t j = 0; j < 8; j++) {
+            size_t byteIndex = v.size() - 1 - (i * 8 + j);
+            uint8_t byte = (byteIndex < v.size()) ? v[byteIndex] : 0;
+
+            limb |= uint64_t(byte) << (8 * j);
+        }
+
+        r.limbs[i] = limb;
+    }
+
+    return r;
+}
+
 BigInt BigInt::one()
 {
     return uint64(1);
@@ -31,6 +55,21 @@ BigInt BigInt::one()
 BigInt BigInt::two()
 {
     return uint64(2);
+}
+
+std::vector<uint8_t> BigInt::to_vectoruint8() const
+{
+    std::vector<uint8_t> bytes;
+
+    for (int i = this->used - 1; i >= 0; i--) {
+        uint64_t limb = this->limbs[i];
+
+        for (int j = 7; j >= 0; j--) {
+            bytes.push_back((limb >> (j * 8)) & 0xFF);
+        }
+    }
+
+    return bytes;
 }
 
 bool BigInt::isOdd() const
@@ -359,5 +398,30 @@ BigInt BigInt::operator-(uint64_t v) const
 
     return result;
 }	
+
+std::string BigInt::to_hex(bool remove_leading_zeros) const
+{
+    std::ostringstream oss;
+
+    for (int i = this->used - 1; i >= 0; i--) {
+        oss << std::hex << std::setw(16) << std::setfill('0') << this->limbs[i];
+    }
+
+    std::string hex = oss.str();
+
+    if (remove_leading_zeros) {
+        size_t pos = oss.str().find_first_not_of('0');
+        if (pos != std::string::npos)
+            hex = oss.str().substr(pos);
+        else
+            hex = "0";
+    }
+
+    return hex;
+}
+
+std::string BigInt::to_base64() const {
+    return base64_encode(this->to_vectoruint8());
+}
 
 }
