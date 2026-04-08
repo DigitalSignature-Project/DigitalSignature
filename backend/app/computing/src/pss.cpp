@@ -168,7 +168,19 @@ bool pss_decode(const std::vector<uint8_t>& EM, const std::vector<uint8_t>& mHas
     return H == H_prime;
 }
 
-bool verify(const std::string& message, const std::vector<uint8_t>& signature, const BigInt& e, const BigInt& n) {
+std::vector<uint8_t> digital_signature(const std::string& message, const BigInt& priv_key, const BigInt& n) {
+    int bits = n.used * 64 / 8;
+
+    std::vector<uint8_t> pss = pss_encode(message, bits, n);
+
+    BigInt bipss = BigInt::vectoruint8(pss);
+
+    BigInt bisign = encrypt(bipss, priv_key, n);
+
+    return bisign.to_vectoruint8();
+}
+
+bool verify(const std::string& message, const std::vector<uint8_t>& signature, const BigInt& pub_key, const BigInt& n) {
     const size_t hashLen = 32;
     const size_t emBits = n.bit_length() - 1;
     const size_t emLen = (emBits + 7) / 8;
@@ -179,7 +191,7 @@ bool verify(const std::string& message, const std::vector<uint8_t>& signature, c
 
     BigInt s = BigInt::vectoruint8(signature);
 
-    BigInt m = decrypt(s, e, n);
+    BigInt m = decrypt(s, pub_key, n);
 
     std::vector<uint8_t> EM = m.to_vectoruint8();
 

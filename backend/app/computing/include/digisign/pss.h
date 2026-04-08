@@ -11,6 +11,7 @@ void apply_embit_mask(std::vector<uint8_t>& maskedDB, size_t emLen, const BigInt
 std::vector<uint8_t> build_em(const std::vector<uint8_t>& maskedDB, const std::vector<uint8_t>& H);
 std::vector<uint8_t> pss_encode(const std::string& message, size_t emLen, const BigInt& n);
 bool pss_decode(const std::vector<uint8_t>& EM, const std::vector<uint8_t>& mHash, size_t emLen, const BigInt& n);
-bool verify(const std::string& message, const std::vector<uint8_t>& signature, const BigInt& e, const BigInt& n);
+std::vector<uint8_t> digital_signature(const std::string& message, const BigInt& priv_key, const BigInt& n);
+bool verify(const std::string& message, const std::vector<uint8_t>& signature, const BigInt& pub_key, const BigInt& n);
 
 }
