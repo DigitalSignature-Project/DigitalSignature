@@ -225,7 +225,7 @@ def run_project():
         print_error(f"Cannot find the backend entry point: {main_script}")
 
     print(f"{Colors.OKGREEN}Launching backend...{Colors.ENDC}")
-    backend = subprocess.Popen([str(python_exe), str(main_script)], cwd="backend")
+    backend = subprocess.Popen([str(python_exe), "main.py"], cwd="backend")
 
     headers = {"Authorization": "Bearer 2137"}
     print("Waiting for backend to be ready...")
