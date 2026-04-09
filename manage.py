@@ -4,7 +4,10 @@ import subprocess
 import platform
 import shutil
 import json
+import time
 from pathlib import Path
+
+import requests
 
 # Terminal colors
 class Colors:
@@ -174,22 +177,40 @@ def build_project():
 
 def run_project():
     print_step("Starting the application...")
-    
+
     is_windows = platform.system() == "Windows"
     python_exe = Path('backend') / '.venv' / ('Scripts' if is_windows else 'bin') / ('python.exe' if is_windows else 'python')
-    
+
     if not python_exe.exists():
         print_error("Virtual environment not found! Please run 'python manage.py setup' first.")
-        
-    app_script = "run_app.py"
-    if not Path(app_script).exists():
-        print_error(f"Cannot find the entry point: {app_script}")
-        
-    print(f"{Colors.OKGREEN}Running {app_script}... (Press CTRL+C to quit){Colors.ENDC}\n")
+
+    main_script = Path('backend') / 'main.py'
+    if not main_script.exists():
+        print_error(f"Cannot find the backend entry point: {main_script}")
+
+    print(f"{Colors.OKGREEN}Launching backend...{Colors.ENDC}")
+    backend = subprocess.Popen([str(python_exe), str(main_script)], cwd="backend")
+
+    # Czekamy, aż backend zacznie odpowiadać
+    headers = {"Authorization": "Bearer 2137"}
+    print("Waiting for backend to be ready...")
+    while True:
+        try:
+            requests.get("http://127.0.0.1:2138", headers=headers)
+            break
+        except:
+            time.sleep(0.5)
+
+    print(f"{Colors.OKGREEN}Launching frontend...{Colors.ENDC}")
+    frontend_cmd = ["npm", "run", "tauri", "dev"]
+    frontend = subprocess.Popen(frontend_cmd, cwd="frontend", shell=True)
+
     try:
-        subprocess.run([str(python_exe), app_script])
-    except KeyboardInterrupt:
-        print(f"\n{Colors.WARNING}Application stopped by user.{Colors.ENDC}")
+        frontend.wait()
+    finally:
+        print(f"{Colors.WARNING}Stopping backend...{Colors.ENDC}")
+        backend.kill()
+        backend.wait()
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
