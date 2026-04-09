@@ -114,7 +114,8 @@ def setup_project():
                 "name": "Run Application (F5)",
                 "type": "debugpy",
                 "request": "launch",
-                "program": "${workspaceFolder}/run_app.py",
+                "program": "${workspaceFolder}/manage.py", 
+                "args": ["run"],
                 "console": "integratedTerminal",
                 "preLaunchTask": "Build project (C++ and Frontend)",
                 "python": python_exe_path,
@@ -248,9 +249,40 @@ def run_project():
         backend.wait()
 
 
+def create_prod_app():
+    print_step("Phase PROD: Building backend (PyInstaller)")
+
+    backend_dir = Path("backend")
+
+    pyinstaller_cmd = [
+        "pyinstaller",
+        "--onefile",
+        "--noconsole",
+        "--add-data",
+        "../frontend/dist;frontend/dist",
+        "--hidden-import=uvicorn",
+        "--hidden-import=app.run",
+        "--name",
+        "backend-x86_64-pc-windows-msvc",
+        "--distpath",
+        "../frontend/src-tauri/binaries",
+        "main.py",
+    ]
+
+    run_cmd(pyinstaller_cmd, cwd=str(backend_dir))
+
+    print_step("Phase PROD: Building frontend (Tauri)")
+    
+    frontend_dir = Path("frontend")
+
+    run_cmd(["npm", "run", "tauri", "build"], cwd=str(frontend_dir))
+
+    print_success("Production build completed successfully!")
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python manage.py [setup|build|run]")
+        print("Usage: python manage.py [setup|build|run|prod]")
         sys.exit(1)
 
     command = sys.argv[1].lower()
@@ -261,5 +293,7 @@ if __name__ == "__main__":
         build_project()
     elif command == "run":
         run_project()
+    elif command == "prod":
+        create_prod_app()
     else:
         print_error("Unknown command. Use 'setup', 'build', or 'run'.")

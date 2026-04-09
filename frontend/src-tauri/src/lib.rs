@@ -18,7 +18,6 @@ pub fn run() {
                     .spawn()
                     .expect("failed to spawn backend.exe");
 
-                // KROK 1: Mutex musi być owinięty w Arc, abyśmy mogli bezpiecznie go przenosić między wątkami
                 app.manage(Arc::new(Mutex::new(Some(child))));
             }
 
@@ -26,7 +25,6 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             if let WindowEvent::CloseRequested { api, .. } = event {
-                // Wstrzymujemy natychmiastowe zamknięcie okna (aby uniknąć osierocenia backendu)
                 api.prevent_close();
 
                 let state = window.app_handle()
@@ -37,16 +35,12 @@ pub fn run() {
                 let app_handle = window.app_handle().clone(); 
 
                 std::thread::spawn(move || {
-                    // Zabijamy backend
                     if let Ok(mut backend_lock) = state.lock() {
                         if let Some(mut child) = backend_lock.take() {
                             
                             #[cfg(target_os = "windows")]
                             {
-                                // Pobieramy ID procesu (PID)
                                 let pid = child.id();
-                                
-                                // Używamy taskkill, aby wymusić zamknięcie całego drzewa procesów
                                 let _ = Command::new("taskkill")
                                     .args(["/F", "/T", "/PID", &pid.to_string()])
                                     .output();
@@ -54,14 +48,12 @@ pub fn run() {
 
                             #[cfg(not(target_os = "windows"))]
                             {
-                                // Standardowe zabijanie dla systemów Unix/Linux/Mac
                                 let _ = child.kill();
                                 let _ = child.wait();
                             }
                         }
                     }
 
-                    // Zamykamy aplikację poprawnie
                     app_handle.exit(0);
                 });
             }
