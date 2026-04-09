@@ -1,3 +1,4 @@
+altgraph==0.17.5
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.12.1
@@ -16,12 +17,16 @@ MarkupSafe==3.0.3
 mypy_extensions==1.1.0
 packaging==26.0
 pathspec==1.0.4
+pefile==2024.8.26
 platformdirs==4.9.4
 pybind11==3.0.2
 pycparser==3.0
 pydantic==2.12.5
 pydantic_core==2.41.5
+pyinstaller==6.19.0
+pyinstaller-hooks-contrib==2026.4
 pytokens==0.4.1
+pywin32-ctypes==0.2.3
 requests==2.33.1
 setuptools==82.0.1
 starlette==1.0.0
