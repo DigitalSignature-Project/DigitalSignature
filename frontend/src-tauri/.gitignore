@@ -5,3 +5,6 @@
 /binaries/
 /binaries
 binaries
+binaries/
+frontend/src-tauri/binaries/
+**/binaries/
