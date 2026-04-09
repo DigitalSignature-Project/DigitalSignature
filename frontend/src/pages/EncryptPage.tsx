@@ -1,6 +1,23 @@
 import { Plus, FileText, Lock } from "lucide-react";
+import { EncryptAndSignBtn } from "../components/EncryptAndSignBtn";
+import { TempResultSection } from "../components/TempResultSection";
+import { calculateRsa } from "../services/rsaAPI";
+import { useState } from "react";
 
 const EncryptPage = () => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [calculated, setCalculated] = useState<string>("Temp data");
+
+  const handleEncryptAndSign = async () => {
+    setLoading(true);
+    setCalculated("Calculating...");
+    const bits: number = 2048;
+    const data = await calculateRsa(bits);
+    setCalculated(data.key_pub);
+    console.log("Wygenerowane klucze (guzik encrypt and sign):", data);
+    setLoading(false);
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center">
@@ -54,20 +71,14 @@ const EncryptPage = () => {
             </label>
           </div>
 
-          <button
-            className="
-    bg-[#1e40af] hover:bg-[#1e3a8a]
-    active:scale-95
-    active:shadow-sm
-    text-white px-8 py-3 rounded-xl font-semibold
-    shadow-md transition-all duration-150
-    cursor-pointer mt-6
-  "
-          >
-            Encrypt and Sign
-          </button>
+          <EncryptAndSignBtn
+            onClick={handleEncryptAndSign}
+            disabled={loading}
+          />
         </div>
       </div>
+
+      <TempResultSection data={calculated} />
     </div>
   );
 };
