@@ -167,14 +167,6 @@ def build_project():
     print("Building CMake targets...")
     run_cmd(['cmake', '--build', str(build_dir), '--config', 'Release'], env=clean_env)
 
-    dist_dir = Path('dist')
-    dist_dir.mkdir(exist_ok=True)
-    
-    ext = "*.pyd" if is_windows else "*.so"
-    for compiled_file in build_dir.rglob(ext):
-        shutil.copy(compiled_file, dist_dir)
-        print_success(f"Copied module: {compiled_file.name} to dist/ directory")
-
     print_step("Compilation: Building Frontend (Vite/React)")
     run_cmd(['npm', 'run', 'build'], cwd='frontend')
     
