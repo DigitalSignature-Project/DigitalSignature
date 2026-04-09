@@ -12,4 +12,3 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(bearer_sche
             detail="Invalid authentication token",
         )
     return token
-
