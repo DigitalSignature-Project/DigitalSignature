@@ -1,4 +1,6 @@
 import { Plus, FileText, Lock } from "lucide-react";
+import { EncryptAndSignBtn } from "../components/EncryptAndSignBtn";
+import { calculateRsa } from "../services/rsaAPI";
 
 const EncryptPage = () => {
   return (
@@ -54,18 +56,16 @@ const EncryptPage = () => {
             </label>
           </div>
 
-          <button
-            className="
-    bg-[#1e40af] hover:bg-[#1e3a8a]
-    active:scale-95
-    active:shadow-sm
-    text-white px-8 py-3 rounded-xl font-semibold
-    shadow-md transition-all duration-150
-    cursor-pointer mt-6
-  "
-          >
-            Encrypt and Sign
-          </button>
+          <EncryptAndSignBtn
+            onClick={async () => {
+              const bits = 1024;
+              const data = await calculateRsa(bits);
+              console.log(
+                "Wygenerowane klucze (guzik encrypt and sign):",
+                data,
+              );
+            }}
+          />
         </div>
       </div>
     </div>
