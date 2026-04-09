@@ -9,8 +9,6 @@ from pathlib import Path
 
 import requests
 
-import requests
-
 
 class Colors:
     HEADER = "\033[95m"
