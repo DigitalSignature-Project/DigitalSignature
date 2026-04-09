@@ -17,7 +17,7 @@ if __name__ == "__main__":
 # generate_rsa_key.rsa_generate_keys(key_pub, key_priv, key_module, bits)
 
 # podpis = generate_rsa_key.pss_encode(wiadomosc, int(bits / 8), key_module)
-# hasz = generate_rsa_key.bytes_to_hex(podpis) 
+# hasz = generate_rsa_key.bytes_to_hex(podpis)
 # big_int_podpis = generate_rsa_key.vectoruint8(podpis)
 # zaszyfrowany = generate_rsa_key.encrypt(big_int_podpis, key_priv, key_module)
 # wektor_zaszyfrowany = zaszyfrowany.to_vectoruint8()
