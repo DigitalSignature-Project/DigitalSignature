@@ -5,9 +5,7 @@ from fastapi.responses import FileResponse
 
 from app.auth import verify_token
 
-router = APIRouter(
-    dependencies=[Depends(verify_token)]
-)
+router = APIRouter(dependencies=[Depends(verify_token)])
 
 
 BASE_DIR = Path(__file__).resolve()

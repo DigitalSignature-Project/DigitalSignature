@@ -9,9 +9,7 @@ from app.schemas.crypto_shemas import (
     RsaKeyParallel,
 )
 
-router = APIRouter(
-    dependencies=[Depends(verify_token)]
-)
+router = APIRouter(dependencies=[Depends(verify_token)])
 
 
 @router.post("/rsa_generate_keys", response_model=RsaKeyResponse)
