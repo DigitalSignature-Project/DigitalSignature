@@ -10,7 +10,6 @@ from pathlib import Path
 import requests
 
 
-# Terminal colors
 class Colors:
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
@@ -228,7 +227,6 @@ def run_project():
     print(f"{Colors.OKGREEN}Launching backend...{Colors.ENDC}")
     backend = subprocess.Popen([str(python_exe), str(main_script)], cwd="backend")
 
-    # Czekamy, aż backend zacznie odpowiadać
     headers = {"Authorization": "Bearer 2137"}
     print("Waiting for backend to be ready...")
     while True:
