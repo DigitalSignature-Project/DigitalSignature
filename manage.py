@@ -9,8 +9,6 @@ from pathlib import Path
 
 import requests
 
-import requests
-
 
 class Colors:
     HEADER = "\033[95m"
@@ -204,7 +202,27 @@ def build_project():
     print_step("Compilation: Building Frontend (Vite/React)")
     run_cmd(["npm", "run", "build"], cwd="frontend")
 
-    print_success("Build process completed successfully!")
+    print_step("Compilation: Building backend binary (PyInstaller)")
+    backend_dir = Path("backend")
+    pyinstaller_cmd = [
+        sys.executable,
+        "-m",
+        "PyInstaller",
+        "--onefile",
+        "--noconsole",
+        "--add-data",
+        "../frontend/dist;frontend/dist",
+        "--hidden-import=uvicorn",
+        "--hidden-import=app.run",
+        "--name",
+        "backend-x86_64-pc-windows-msvc",
+        "--distpath",
+        "../frontend/src-tauri/binaries",
+        "main.py",
+    ]
+    run_cmd(pyinstaller_cmd, cwd=str(backend_dir))
+
+    print_success("Build process completed successfully! Binaries are ready.")
 
 
 def run_project():
@@ -252,34 +270,15 @@ def run_project():
 
 
 def create_prod_app():
-    print_step("Phase PROD: Building backend (PyInstaller)")
 
-    backend_dir = Path("backend")
+    print_step("Phase PROD: Ensuring all components are built")
+    build_project()
 
-    pyinstaller_cmd = [
-        "pyinstaller",
-        "--onefile",
-        "--noconsole",
-        "--add-data",
-        "../frontend/dist;frontend/dist",
-        "--hidden-import=uvicorn",
-        "--hidden-import=app.run",
-        "--name",
-        "backend-x86_64-pc-windows-msvc",
-        "--distpath",
-        "../frontend/src-tauri/binaries",
-        "main.py",
-    ]
-
-    run_cmd(pyinstaller_cmd, cwd=str(backend_dir))
-
-    print_step("Phase PROD: Building frontend (Tauri)")
-    
+    print_step("Phase PROD: Packaging final application (Tauri)")
     frontend_dir = Path("frontend")
-
     run_cmd(["npm", "run", "tauri", "build"], cwd=str(frontend_dir))
 
-    print_success("Production build completed successfully!")
+    print_success("Production build completed successfully! Check frontend/src-tauri/target/release/bundle/")
 
 
 if __name__ == "__main__":
@@ -298,4 +297,4 @@ if __name__ == "__main__":
     elif command == "prod":
         create_prod_app()
     else:
-        print_error("Unknown command. Use 'setup', 'build', or 'run'.")
+        print_error("Unknown command. Use 'setup', 'build', 'run' , or 'prod'.")
