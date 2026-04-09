@@ -1,8 +1,19 @@
 import { Plus, FileText, Lock } from "lucide-react";
 import { EncryptAndSignBtn } from "../components/EncryptAndSignBtn";
 import { calculateRsa } from "../services/rsaAPI";
+import { useState } from "react";
 
 const EncryptPage = () => {
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const handleEncryptAndSign = async () => {
+    setLoading(true);
+    const bits: number = 2048;
+    const data = await calculateRsa(bits);
+    console.log("Wygenerowane klucze (guzik encrypt and sign):", data);
+    setLoading(false);
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center">
@@ -57,14 +68,8 @@ const EncryptPage = () => {
           </div>
 
           <EncryptAndSignBtn
-            onClick={async () => {
-              const bits = 1024;
-              const data = await calculateRsa(bits);
-              console.log(
-                "Wygenerowane klucze (guzik encrypt and sign):",
-                data,
-              );
-            }}
+            onClick={handleEncryptAndSign}
+            disabled={loading}
           />
         </div>
       </div>

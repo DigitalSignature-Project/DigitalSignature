@@ -1,9 +1,13 @@
 import { type JSX } from "react";
 
-type VerifySignatureBtnProps = { onClick: () => void };
+type VerifySignatureBtnProps = {
+  onClick: () => void;
+  disabled: boolean;
+};
 
 export const VerifySignatureBtn = ({
   onClick,
+  disabled,
 }: VerifySignatureBtnProps): JSX.Element => {
   return (
     <button
@@ -18,7 +22,7 @@ export const VerifySignatureBtn = ({
   "
       onClick={onClick}
     >
-      Verify signature
+      {disabled ? "Generating..." : "Verify signature"}
     </button>
   );
 };

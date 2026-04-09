@@ -1,6 +1,7 @@
 import { FileText, Check, ShieldAlert } from "lucide-react";
 import { VerifySignatureBtn } from "../components/VerifySignatureBtn";
 import { calculateRsa } from "../services/rsaAPI";
+import { useState } from "react";
 
 const GradientCheck = () => (
   <svg className="w-40 h-40" viewBox="0 0 24 24" fill="none" strokeWidth={2}>
@@ -15,6 +16,15 @@ const GradientCheck = () => (
 );
 
 const VerifyPage = () => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const handleVerifySignature = async () => {
+    setLoading(true);
+    const bits: number = 2048;
+    const data = await calculateRsa(bits);
+    console.log("Wygenerowane klucze (guzik verify signature):", data);
+    setLoading(false);
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <p className="font-bold text-[#0f172a] text-4xl text-center mt-2">
@@ -49,11 +59,8 @@ const VerifyPage = () => {
         <div className="w-120 bg-slate-200 rounded-full h-0.5 mt-6"></div>
 
         <VerifySignatureBtn
-          onClick={async () => {
-            const bits = 1024;
-            const data = await calculateRsa(bits);
-            console.log("Wygenerowane klucze (guzik verify signature):", data);
-          }}
+          onClick={handleVerifySignature}
+          disabled={loading}
         />
       </div>
 

@@ -2,10 +2,12 @@ import { type JSX } from "react";
 
 type EncryptAndSignBtnProps = {
   onClick: () => void;
+  disabled: boolean;
 };
 
 export const EncryptAndSignBtn = ({
   onClick,
+  disabled,
 }: EncryptAndSignBtnProps): JSX.Element => {
   return (
     <button
@@ -19,7 +21,7 @@ export const EncryptAndSignBtn = ({
   "
       onClick={onClick}
     >
-      Encrypt and Sign
+      {disabled ? "Generating..." : "Encrypt and Sign"}
     </button>
   );
 };
