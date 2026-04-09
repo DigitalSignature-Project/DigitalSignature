@@ -1,7 +1,9 @@
-import { NavLink, Outlet } from 'react-router-dom';
-import { Home, Lock, ShieldCheck, Settings, Bell, User, Shield } from 'lucide-react';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'; 
+import { Home, Lock, ShieldCheck, Settings, Bell, User, Shield, LogOut } from 'lucide-react';
 
 const Layout = () => {
+  const navigate = useNavigate(); 
+
   const navItems = [
     { name: 'Dashboard', path: '/', icon: Home },
     { name: 'Encrypt and Sign', path: '/encrypt', icon: Lock },
@@ -35,6 +37,15 @@ const Layout = () => {
             </NavLink>
           ))}
         </nav>
+        <div className="p-4 border-t border-slate-800">
+          <button 
+            onClick={() => navigate('/login')}
+            className="flex items-center w-full px-4 py-3 text-slate-400 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-colors"
+          >
+            <LogOut className="w-5 h-5 mr-3" />
+            <span className="font-medium">Wyloguj się</span>
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -43,7 +54,10 @@ const Layout = () => {
             <button className="text-slate-400 hover:text-slate-600">
               <Bell className="w-5 h-5" />
             </button>
-            <div className="flex items-center space-x-2 border-l pl-4 border-slate-200">
+            <div 
+              className="flex items-center space-x-2 border-l pl-4 border-slate-200 cursor-pointer hover:opacity-80"
+              onClick={() => navigate('/login')} 
+            >
               <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center">
                 <User className="w-5 h-5 text-slate-500" />
               </div>

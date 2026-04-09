@@ -2,11 +2,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./pages/Layout";
 import EncryptPage from "./pages/EncryptPage";
 import VerifyPage from "./pages/VerifyPage";
+import AuthPage from "./pages/AuthPage";
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/login" element={<AuthPage />}/>
         <Route path="/" element={<Layout />}>
           <Route
             index
