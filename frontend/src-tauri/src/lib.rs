@@ -1,21 +1,18 @@
-use std::process::Command;
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(
+            tauri_plugin_log::Builder::default()
+                .targets([
+                    tauri_plugin_log::Target::new(
+                        tauri_plugin_log::TargetKind::Stdout
+                    )
+                ])
+                .level(log::LevelFilter::Info)
+                .build()
+        )
         .setup(|_app| {
-            #[cfg(debug_assertions)]
-            {
-                tauri_plugin_log::Builder::default()
-                    .targets([tauri_plugin_log::Target::Stdout])
-                    .level(log::LevelFilter::Info)
-                    .build()
-                    .unwrap()
-                    .install(app.handle())
-                    .unwrap();
-            }
-
-            #[cfg(target_os = "windows")]
+            #[cfg(all(not(debug_assertions), target_os = "windows"))]
             {
                 let exe_path = std::env::current_exe()
                     .expect("failed to get current exe path")

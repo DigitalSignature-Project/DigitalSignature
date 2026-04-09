@@ -1,15 +1,19 @@
 import { Plus, FileText, Lock } from "lucide-react";
 import { EncryptAndSignBtn } from "../components/EncryptAndSignBtn";
+import { TempResultSection } from "../components/TempResultSection";
 import { calculateRsa } from "../services/rsaAPI";
 import { useState } from "react";
 
 const EncryptPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
+  const [calculated, setCalculated] = useState<string>("Temp data");
 
   const handleEncryptAndSign = async () => {
     setLoading(true);
+    setCalculated("Calculating...");
     const bits: number = 2048;
     const data = await calculateRsa(bits);
+    setCalculated(data.key_pub);
     console.log("Wygenerowane klucze (guzik encrypt and sign):", data);
     setLoading(false);
   };
@@ -73,6 +77,8 @@ const EncryptPage = () => {
           />
         </div>
       </div>
+
+      <TempResultSection data={calculated} />
     </div>
   );
 };
