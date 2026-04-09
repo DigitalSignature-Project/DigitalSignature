@@ -1,16 +1,63 @@
+use std::process::{Command, Child};
+use std::sync::{Arc, Mutex}; // Dodano import Arc
+use tauri::{Manager, WindowEvent};
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-  tauri::Builder::default()
-    .setup(|app| {
-      if cfg!(debug_assertions) {
-        app.handle().plugin(
-          tauri_plugin_log::Builder::default()
-            .level(log::LevelFilter::Info)
-            .build(),
-        )?;
-      }
-      Ok(())
-    })
-    .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+    tauri::Builder::default()
+        .setup(|app| {
+            #[cfg(all(not(debug_assertions), target_os = "windows"))]
+            {
+                let exe_path = std::env::current_exe()
+                    .expect("failed to get current exe path")
+                    .parent()
+                    .expect("failed to get exe directory")
+                    .join("backend.exe");
+
+                let child: Child = Command::new(exe_path)
+                    .spawn()
+                    .expect("failed to spawn backend.exe");
+
+                app.manage(Arc::new(Mutex::new(Some(child))));
+            }
+
+            Ok(())
+        })
+        .on_window_event(|window, event| {
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+
+                let state = window.app_handle()
+                    .state::<Arc<Mutex<Option<Child>>>>()
+                    .inner()
+                    .clone();
+
+                let app_handle = window.app_handle().clone(); 
+
+                std::thread::spawn(move || {
+                    if let Ok(mut backend_lock) = state.lock() {
+                        if let Some(mut child) = backend_lock.take() {
+                            
+                            #[cfg(target_os = "windows")]
+                            {
+                                let pid = child.id();
+                                let _ = Command::new("taskkill")
+                                    .args(["/F", "/T", "/PID", &pid.to_string()])
+                                    .output();
+                            }
+
+                            #[cfg(not(target_os = "windows"))]
+                            {
+                                let _ = child.kill();
+                                let _ = child.wait();
+                            }
+                        }
+                    }
+
+                    app_handle.exit(0);
+                });
+            }
+        })
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }

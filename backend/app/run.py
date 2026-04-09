@@ -1,4 +1,6 @@
 from pathlib import Path
+import sys
+import os
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -17,11 +19,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
-app.mount(
-    "/static", StaticFiles(directory=str(frontend_dist), html=True), name="frontend"
-)
+if getattr(sys, "frozen", False):
+    base_path = os.path.join(sys._MEIPASS, "frontend", "dist")
+else:
+    base_path = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
+app.mount(
+    "/static",
+    StaticFiles(directory=str(base_path), html=True),
+    name="frontend"
+)
 
 app.include_router(spa_router.router)
 app.include_router(crypto_router.router, prefix="/api")

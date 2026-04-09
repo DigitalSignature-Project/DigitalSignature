@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Layout from "./components/Layout";
-import EncryptPage from "./components/EncryptPage";
-import VerifyPage from "./components/VerifyPage";
+import Layout from "./pages/Layout";
+import EncryptPage from "./pages/EncryptPage";
+import VerifyPage from "./pages/VerifyPage";
 
 const App = () => {
   return (
