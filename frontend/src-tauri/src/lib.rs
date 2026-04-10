@@ -19,8 +19,8 @@ pub fn run() {
                     .spawn()
                     .expect("failed to spawn backend.exe");
 
-                let state = app.state::<Arc<Mutex<Option<Child>>>>();
-                if let Ok(mut backend_lock) = state.lock() {
+                let state_arc = app.state::<Arc<Mutex<Option<Child>>>>().inner().clone();
+                if let Ok(mut backend_lock) = state_arc.lock() {
                     *backend_lock = Some(child);
                 }
             }
@@ -40,6 +40,7 @@ pub fn run() {
 
                 std::thread::spawn(move || {
                     if let Ok(mut backend_lock) = state.lock() {
+                        #[allow(unused_mut)]
                         if let Some(mut child) = backend_lock.take() {
                             
                             #[cfg(target_os = "windows")]
