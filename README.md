@@ -18,7 +18,7 @@ Application for creating a digital signature
 
 5. Download CMake from: `https://cmake.org/download/`.
 
-6. Download Visual Studio with powershell command: `winget install Microsoft.VisualStudio.2022.BuildTools --silent --override "--wait --quiet --add Microsoft.VisualStudio.Workload.NativeDesktop --includeRecommended" `
+6. Download Visual Studio BuildTools with powershell command: `winget install Microsoft.VisualStudio.2022.BuildTools --silent --override "--wait --quiet --add Microsoft.VisualStudio.Workload.NativeDesktop --includeRecommended" `
 
 7. Install all dependencies for application frontend. For more details check this manual: [Frontend manual](frontend/README.md)
 
