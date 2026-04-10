@@ -55,20 +55,6 @@ def setup_project():
     print_step("Phase 2/4: Backend Configuration (Python)")
     backend_dir = Path("backend")
     venv_dir = backend_dir / ".venv"
-
-    if not venv_dir.exists():
-        print("Creating virtual environment...")
-        run_cmd([sys.executable, "-m", "venv", str(venv_dir)])
-
-    python_venv = (
-        venv_dir / "Scripts" / "python.exe"
-        if platform.system() == "Windows"
-        else venv_dir / "bin" / "python"
-    )
-
-    print("Bootstrapping pip in venv...")
-    run_cmd([str(python_venv), "-m", "ensurepip", "--upgrade"])
-
     is_windows = platform.system() == "Windows"
 
     python_exe = (
@@ -77,12 +63,18 @@ def setup_project():
         else venv_dir / "bin" / "python"
     )
 
+    if not python_exe.exists():
+        print("Python executable not found. Creating virtual environment...")
+        if venv_dir.exists():
+            shutil.rmtree(venv_dir)
+        run_cmd([sys.executable, "-m", "venv", str(venv_dir)])
+
     print("Ensuring pip is installed...")
     run_cmd([str(python_exe), "-m", "ensurepip", "--upgrade"])
 
     print("Installing Python dependencies...")
     run_cmd([
-        str(venv_dir / "Scripts" / "python.exe") if is_windows else str(venv_dir / "bin" / "python"),
+        str(python_exe),
         "-m",
         "pip",
         "install",
@@ -156,31 +148,15 @@ def build_project():
     is_windows = platform.system() == "Windows"
 
     if not vcpkg_root:
-        vcpkg_root = "C:\\vcpkg" if is_windows else f"{os.environ.get('HOME')}/vcpkg"
-        print(f"{Colors.WARNING}VCPKG_ROOT not set. Using default: {vcpkg_root}{Colors.ENDC}")
-
-    vcpkg_root = Path(vcpkg_root)
-    vcpkg_exe = vcpkg_root / ("vcpkg.exe" if is_windows else "vcpkg")
-    vcpkg_toolchain = vcpkg_root / "scripts" / "buildsystems" / "vcpkg.cmake"
-
-    if not vcpkg_toolchain.exists():
-        print_step("vcpkg not found. Installing automatically...")
-
-        if not vcpkg_root.exists():
-            print("Cloning vcpkg repository...")
-            run_cmd(["git", "clone", "https://github.com/microsoft/vcpkg.git", str(vcpkg_root)])
-
-        print("Bootstrapping vcpkg...")
-        bootstrap_script = (
-            vcpkg_root / "bootstrap-vcpkg.bat"
-            if is_windows
-            else vcpkg_root / "bootstrap-vcpkg.sh"
+        default_vcpkg = "C:\\vcpkg" if is_windows else f"{os.environ.get('HOME')}/vcpkg"
+        print(
+            f"{Colors.WARNING}VCPKG_ROOT variable is missing. Attempting to use: {default_vcpkg}{Colors.ENDC}"
         )
+        vcpkg_root = default_vcpkg
 
-        run_cmd([str(bootstrap_script)], cwd=str(vcpkg_root))
-
-        if not vcpkg_toolchain.exists():
-            print_error("vcpkg installation failed!")
+    vcpkg_toolchain = Path(vcpkg_root) / "scripts" / "buildsystems" / "vcpkg.cmake"
+    if not vcpkg_toolchain.exists():
+        print_error(f"VCPKG toolchain file not found: {vcpkg_toolchain}")
 
     build_dir = computing_dir / "build"
     build_dir.mkdir(exist_ok=True)
