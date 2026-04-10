@@ -1,10 +1,11 @@
 use std::process::{Command, Child};
-use std::sync::{Arc, Mutex}; // Dodano import Arc
+use std::sync::{Arc, Mutex};
 use tauri::{Manager, WindowEvent};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(Arc::new(Mutex::new(None::<Child>)))
         .setup(|app| {
             #[cfg(all(not(debug_assertions), target_os = "windows"))]
             {
@@ -18,7 +19,10 @@ pub fn run() {
                     .spawn()
                     .expect("failed to spawn backend.exe");
 
-                app.manage(Arc::new(Mutex::new(Some(child))));
+                let state = app.state::<Arc<Mutex<Option<Child>>>>();
+                if let Ok(mut backend_lock) = state.lock() {
+                    *backend_lock = Some(child);
+                }
             }
 
             Ok(())
