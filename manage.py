@@ -73,13 +73,29 @@ def setup_project():
         print("Creating virtual environment...")
         run_cmd([sys.executable, "-m", "venv", str(venv_dir)])
 
+    python_venv = (
+        venv_dir / "Scripts" / "python.exe"
+        if platform.system() == "Windows"
+        else venv_dir / "bin" / "python"
+    )
+
+    print("Bootstrapping pip in venv...")
+    run_cmd([str(python_venv), "-m", "ensurepip", "--upgrade"])
+
     is_windows = platform.system() == "Windows"
     pip_exe = (
         venv_dir / "Scripts" / "pip.exe" if is_windows else venv_dir / "bin" / "pip"
     )
 
     print("Installing Python dependencies...")
-    run_cmd([str(pip_exe), "install", "-r", str(backend_dir / "requirements.txt")])
+    run_cmd([
+        str(venv_dir / "Scripts" / "python.exe") if is_windows else str(venv_dir / "bin" / "python"),
+        "-m",
+        "pip",
+        "install",
+        "-r",
+        str(backend_dir / "requirements.txt")
+    ])
 
     print_step("Phase 3/4: Frontend Configuration (NPM)")
     run_cmd(["npm", "install"], cwd="frontend")
@@ -147,15 +163,31 @@ def build_project():
     is_windows = platform.system() == "Windows"
 
     if not vcpkg_root:
-        default_vcpkg = "C:\\vcpkg" if is_windows else f"{os.environ.get('HOME')}/vcpkg"
-        print(
-            f"{Colors.WARNING}VCPKG_ROOT variable is missing. Attempting to use: {default_vcpkg}{Colors.ENDC}"
-        )
-        vcpkg_root = default_vcpkg
+        vcpkg_root = "C:\\vcpkg" if is_windows else f"{os.environ.get('HOME')}/vcpkg"
+        print(f"{Colors.WARNING}VCPKG_ROOT not set. Using default: {vcpkg_root}{Colors.ENDC}")
 
-    vcpkg_toolchain = Path(vcpkg_root) / "scripts" / "buildsystems" / "vcpkg.cmake"
+    vcpkg_root = Path(vcpkg_root)
+    vcpkg_exe = vcpkg_root / ("vcpkg.exe" if is_windows else "vcpkg")
+    vcpkg_toolchain = vcpkg_root / "scripts" / "buildsystems" / "vcpkg.cmake"
+
     if not vcpkg_toolchain.exists():
-        print_error(f"VCPKG toolchain file not found: {vcpkg_toolchain}")
+        print_step("vcpkg not found. Installing automatically...")
+
+        if not vcpkg_root.exists():
+            print("Cloning vcpkg repository...")
+            run_cmd(["git", "clone", "https://github.com/microsoft/vcpkg.git", str(vcpkg_root)])
+
+        print("Bootstrapping vcpkg...")
+        bootstrap_script = (
+            vcpkg_root / "bootstrap-vcpkg.bat"
+            if is_windows
+            else vcpkg_root / "bootstrap-vcpkg.sh"
+        )
+
+        run_cmd([str(bootstrap_script)], cwd=str(vcpkg_root))
+
+        if not vcpkg_toolchain.exists():
+            print_error("vcpkg installation failed!")
 
     build_dir = computing_dir / "build"
     build_dir.mkdir(exist_ok=True)
@@ -204,23 +236,49 @@ def build_project():
 
     print_step("Compilation: Building backend binary (PyInstaller)")
     backend_dir = Path("backend")
-    pyinstaller_cmd = [
-        sys.executable,
-        "-m",
-        "PyInstaller",
-        "--onefile",
-        "--noconsole",
-        "--add-data",
-        "../frontend/dist;frontend/dist",
-        "--hidden-import=uvicorn",
-        "--hidden-import=app.run",
-        "--name",
-        "backend-x86_64-pc-windows-msvc",
-        "--distpath",
-        "../frontend/src-tauri/binaries",
-        "main.py",
-    ]
-    run_cmd(pyinstaller_cmd, cwd=str(backend_dir))
+    
+    venv_python = (
+        backend_dir / ".venv" / "Scripts" / "python.exe"
+        if is_windows
+        else backend_dir / ".venv" / "bin" / "python"
+    )
+
+    if not venv_python.exists():
+        print_error("Virtual environment not found! Please run 'python manage.py setup' first.")
+
+    binary_name = "backend-x86_64-pc-windows-msvc" + (".exe" if is_windows else "")
+    binary_path = Path("frontend/src-tauri/binaries") / binary_name
+
+    source_files = [f for f in backend_dir.rglob("*.py") if ".venv" not in f.parts]
+    req_file = backend_dir / "requirements.txt"
+    if req_file.exists():
+        source_files.append(req_file)
+
+    latest_source_time = 0
+    if source_files:
+        latest_source_time = max(f.stat().st_mtime for f in source_files)
+
+    if binary_path.exists() and binary_path.stat().st_mtime > latest_source_time:
+        print_success("Backend code has not changed. Skipping PyInstaller build.")
+    else:
+        print("Changes detected or binary missing. Running PyInstaller...")
+        pyinstaller_cmd = [
+            str(venv_python),
+            "-m",
+            "PyInstaller",
+            "--onefile",
+            "--noconsole",
+            "--add-data",
+            "../frontend/dist;frontend/dist",
+            "--hidden-import=uvicorn",
+            "--hidden-import=app.run",
+            "--name",
+            "backend-x86_64-pc-windows-msvc",
+            "--distpath",
+            "../frontend/src-tauri/binaries",
+            "main.py",
+        ]
+        run_cmd(pyinstaller_cmd, cwd=str(backend_dir))
 
     print_success("Build process completed successfully! Binaries are ready.")
 

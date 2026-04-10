@@ -18,16 +18,20 @@ Application for creating a digital signature
 
 5. Download CMake from: `https://cmake.org/download/`.
 
-6. Install all dependencies for application frontend. For more details check this manual: [Frontend manual](frontend/README.md)
+6. Download Visual Studio BuildTools with powershell command: `winget install Microsoft.VisualStudio.2022.BuildTools --silent --override "--wait --quiet --add Microsoft.VisualStudio.Workload.NativeDesktop --includeRecommended" `
 
-7. Install all dependencies for application backend. For more details check this manual: [Backend manual](backend/README.md)
+7. Install all dependencies for application frontend. For more details check this manual: [Frontend manual](frontend/README.md)
 
-8. After installation process you can finally run dev app version using following command (you must first activate the Python virtual environment): `python run_app.py`
+8. Install all dependencies for application backend. For more details check this manual: [Backend manual](backend/README.md)
 
 # Alternative setup for developers
+# After completing the first 6 steps in the instructions above.
 
-1. After completing the first 5 steps in the instructions above, you can use the `manage.py` script to install the remaining dependencies and run the project using the following commands:
+1. Install requests module for python: `pip install requests`
+
+2. Use the `manage.py` script to install the remaining dependencies and run the project using the following commands:
 
 - `python manage.py setup` - this command installs all necessary dependencies.
 - `python manage.py build` - this command installs the developer version of the application.
 - `python manage.py run` - this command launch application.
+- `python manage.py prod` - this command builds utility applications
