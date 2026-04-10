@@ -52,19 +52,6 @@ def setup_project():
     print_step("Phase 1/4: Environment and Git verification")
     check_tools()
 
-    print("Switching to develop branch...")
-    checkout_result = subprocess.run(
-        ["git", "checkout", "develop"], capture_output=True, text=True
-    )
-
-    if checkout_result.returncode != 0:
-        print(
-            f"{Colors.WARNING}Local 'develop' branch not found. Attempting to fetch from origin...{Colors.ENDC}"
-        )
-        run_cmd(["git", "switch", "-c", "develop", "origin/develop"])
-
-    run_cmd(["git", "pull"])
-
     print_step("Phase 2/4: Backend Configuration (Python)")
     backend_dir = Path("backend")
     venv_dir = backend_dir / ".venv"
@@ -73,23 +60,20 @@ def setup_project():
         print("Creating virtual environment...")
         run_cmd([sys.executable, "-m", "venv", str(venv_dir)])
 
-    python_venv = (
+    is_windows = platform.system() == "Windows"
+
+    python_exe = (
         venv_dir / "Scripts" / "python.exe"
-        if platform.system() == "Windows"
+        if is_windows
         else venv_dir / "bin" / "python"
     )
 
-    print("Bootstrapping pip in venv...")
-    run_cmd([str(python_venv), "-m", "ensurepip", "--upgrade"])
-
-    is_windows = platform.system() == "Windows"
-    pip_exe = (
-        venv_dir / "Scripts" / "pip.exe" if is_windows else venv_dir / "bin" / "pip"
-    )
+    print("Ensuring pip is installed...")
+    run_cmd([str(python_exe), "-m", "ensurepip", "--upgrade"])
 
     print("Installing Python dependencies...")
     run_cmd([
-        str(venv_dir / "Scripts" / "python.exe") if is_windows else str(venv_dir / "bin" / "python"),
+        str(python_exe),
         "-m",
         "pip",
         "install",
@@ -163,31 +147,15 @@ def build_project():
     is_windows = platform.system() == "Windows"
 
     if not vcpkg_root:
-        vcpkg_root = "C:\\vcpkg" if is_windows else f"{os.environ.get('HOME')}/vcpkg"
-        print(f"{Colors.WARNING}VCPKG_ROOT not set. Using default: {vcpkg_root}{Colors.ENDC}")
-
-    vcpkg_root = Path(vcpkg_root)
-    vcpkg_exe = vcpkg_root / ("vcpkg.exe" if is_windows else "vcpkg")
-    vcpkg_toolchain = vcpkg_root / "scripts" / "buildsystems" / "vcpkg.cmake"
-
-    if not vcpkg_toolchain.exists():
-        print_step("vcpkg not found. Installing automatically...")
-
-        if not vcpkg_root.exists():
-            print("Cloning vcpkg repository...")
-            run_cmd(["git", "clone", "https://github.com/microsoft/vcpkg.git", str(vcpkg_root)])
-
-        print("Bootstrapping vcpkg...")
-        bootstrap_script = (
-            vcpkg_root / "bootstrap-vcpkg.bat"
-            if is_windows
-            else vcpkg_root / "bootstrap-vcpkg.sh"
+        default_vcpkg = "C:\\vcpkg" if is_windows else f"{os.environ.get('HOME')}/vcpkg"
+        print(
+            f"{Colors.WARNING}VCPKG_ROOT variable is missing. Attempting to use: {default_vcpkg}{Colors.ENDC}"
         )
+        vcpkg_root = default_vcpkg
 
-        run_cmd([str(bootstrap_script)], cwd=str(vcpkg_root))
-
-        if not vcpkg_toolchain.exists():
-            print_error("vcpkg installation failed!")
+    vcpkg_toolchain = Path(vcpkg_root) / "scripts" / "buildsystems" / "vcpkg.cmake"
+    if not vcpkg_toolchain.exists():
+        print_error(f"VCPKG toolchain file not found: {vcpkg_toolchain}")
 
     build_dir = computing_dir / "build"
     build_dir.mkdir(exist_ok=True)
@@ -237,6 +205,7 @@ def build_project():
     print_step("Compilation: Building backend binary (PyInstaller)")
     backend_dir = Path("backend")
     
+    # 1. POPRAWKA: Pobieramy prawidłową ścieżkę do środowiska wirtualnego w backend/
     venv_python = (
         backend_dir / ".venv" / "Scripts" / "python.exe"
         if is_windows
@@ -244,8 +213,9 @@ def build_project():
     )
 
     if not venv_python.exists():
-        print_error("Virtual environment not found! Please run 'python manage.py setup' first.")
+        print_error("Virtual environment not found in backend/.venv! Please run 'python manage.py setup' first.")
 
+    # 2. POPRAWKA: Logika pomijania budowania (Caching)
     binary_name = "backend-x86_64-pc-windows-msvc" + (".exe" if is_windows else "")
     binary_path = Path("frontend/src-tauri/binaries") / binary_name
 
@@ -263,7 +233,7 @@ def build_project():
     else:
         print("Changes detected or binary missing. Running PyInstaller...")
         pyinstaller_cmd = [
-            str(venv_python),
+            str(venv_python), # Używamy poprawnego pythona z .venv
             "-m",
             "PyInstaller",
             "--onefile",

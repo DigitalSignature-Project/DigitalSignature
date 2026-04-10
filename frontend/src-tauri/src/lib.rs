@@ -1,12 +1,13 @@
 use std::process::{Command, Child};
-use std::sync::{Arc, Mutex};
-use tauri::{Manager, WindowEvent};
+use std::sync::Mutex;
+use tauri::{Manager, WindowEvent}; 
+
+static BACKEND_PROCESS: Mutex<Option<Child>> = Mutex::new(None);
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .manage(Arc::new(Mutex::new(None::<Child>)))
-        .setup(|app| {
+        .setup(|_app| {
             #[cfg(all(not(debug_assertions), target_os = "windows"))]
             {
                 let exe_path = std::env::current_exe()
@@ -15,13 +16,12 @@ pub fn run() {
                     .expect("failed to get exe directory")
                     .join("backend.exe");
 
-                let child: Child = Command::new(exe_path)
+                let child = Command::new(exe_path)
                     .spawn()
                     .expect("failed to spawn backend.exe");
 
-                let state_arc = app.state::<Arc<Mutex<Option<Child>>>>().inner().clone();
-                if let Ok(mut backend_lock) = state_arc.lock() {
-                    *backend_lock = Some(child);
+                if let Ok(mut process_lock) = BACKEND_PROCESS.lock() {
+                    *process_lock = Some(child);
                 }
             }
 
@@ -31,17 +31,12 @@ pub fn run() {
             if let WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
 
-                let state = window.app_handle()
-                    .state::<Arc<Mutex<Option<Child>>>>()
-                    .inner()
-                    .clone();
-
                 let app_handle = window.app_handle().clone(); 
 
                 std::thread::spawn(move || {
-                    if let Ok(mut backend_lock) = state.lock() {
+                    if let Ok(mut process_lock) = BACKEND_PROCESS.lock() {
                         #[allow(unused_mut)]
-                        if let Some(mut child) = backend_lock.take() {
+                        if let Some(mut child) = process_lock.take() {
                             
                             #[cfg(target_os = "windows")]
                             {
