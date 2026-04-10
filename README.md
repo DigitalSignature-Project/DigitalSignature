@@ -24,8 +24,6 @@ Application for creating a digital signature
 
 8. Install all dependencies for application backend. For more details check this manual: [Backend manual](backend/README.md)
 
-9. After installation process you can finally run dev app version using following command (you must first activate the Python virtual environment): `python run_app.py`
-
 # Alternative setup for developers
 # After completing the first 6 steps in the instructions above.
 
@@ -36,3 +34,4 @@ Application for creating a digital signature
 - `python manage.py setup` - this command installs all necessary dependencies.
 - `python manage.py build` - this command installs the developer version of the application.
 - `python manage.py run` - this command launch application.
+- `python manage.py prod` - this command builds utility applications
