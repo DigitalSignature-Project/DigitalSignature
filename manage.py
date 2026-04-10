@@ -154,9 +154,27 @@ def build_project():
         )
         vcpkg_root = default_vcpkg
 
-    vcpkg_toolchain = Path(vcpkg_root) / "scripts" / "buildsystems" / "vcpkg.cmake"
+    vcpkg_root_path = Path(vcpkg_root)
+    vcpkg_toolchain = vcpkg_root_path / "scripts" / "buildsystems" / "vcpkg.cmake"
+
     if not vcpkg_toolchain.exists():
-        print_error(f"VCPKG toolchain file not found: {vcpkg_toolchain}")
+        print_step("vcpkg not found. Installing automatically...")
+
+        if not vcpkg_root_path.exists():
+            print("Cloning vcpkg repository...")
+            run_cmd(["git", "clone", "https://github.com/microsoft/vcpkg.git", str(vcpkg_root_path)])
+
+        print("Bootstrapping vcpkg...")
+        bootstrap_script = (
+            vcpkg_root_path / "bootstrap-vcpkg.bat"
+            if is_windows
+            else vcpkg_root_path / "bootstrap-vcpkg.sh"
+        )
+
+        run_cmd([str(bootstrap_script)], cwd=str(vcpkg_root_path))
+
+        if not vcpkg_toolchain.exists():
+            print_error("vcpkg installation failed!")
 
     build_dir = computing_dir / "build"
     build_dir.mkdir(exist_ok=True)
@@ -173,7 +191,7 @@ def build_project():
 
     triplet = "x64-windows" if is_windows else "x64-linux"
 
-    vcpkg_exe = Path(vcpkg_root) / ("vcpkg.exe" if is_windows else "vcpkg")
+    vcpkg_exe = vcpkg_root_path / ("vcpkg.exe" if is_windows else "vcpkg")
     if vcpkg_exe.exists():
         print_step(f"Checking/Installing C++ dependencies for triplet: {triplet}...")
         run_cmd([str(vcpkg_exe), "install", f"pybind11:{triplet}"])
