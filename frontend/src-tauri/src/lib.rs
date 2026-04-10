@@ -15,7 +15,7 @@ pub fn run() {
                     .expect("failed to get exe directory")
                     .join("backend.exe");
 
-                let child: Child = Command::new(exe_path)
+                let child = Command::new(exe_path)
                     .spawn()
                     .expect("failed to spawn backend.exe");
 
@@ -31,16 +31,12 @@ pub fn run() {
             if let WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
 
-                let state = window.app_handle()
-                    .state::<Arc<Mutex<Option<Child>>>>()
-                    .inner()
-                    .clone();
-
                 let app_handle = window.app_handle().clone(); 
 
                 std::thread::spawn(move || {
-                    if let Ok(mut backend_lock) = state.lock() {
-                        if let Some(mut child) = backend_lock.take() {
+                    if let Ok(mut process_lock) = BACKEND_PROCESS.lock() {
+                        #[allow(unused_mut)]
+                        if let Some(mut child) = process_lock.take() {
                             
                             #[cfg(target_os = "windows")]
                             {

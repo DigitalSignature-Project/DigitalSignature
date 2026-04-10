@@ -52,19 +52,6 @@ def setup_project():
     print_step("Phase 1/4: Environment and Git verification")
     check_tools()
 
-    print("Switching to develop branch...")
-    checkout_result = subprocess.run(
-        ["git", "checkout", "develop"], capture_output=True, text=True
-    )
-
-    if checkout_result.returncode != 0:
-        print(
-            f"{Colors.WARNING}Local 'develop' branch not found. Attempting to fetch from origin...{Colors.ENDC}"
-        )
-        run_cmd(["git", "switch", "-c", "develop", "origin/develop"])
-
-    run_cmd(["git", "pull"])
-
     print_step("Phase 2/4: Backend Configuration (Python)")
     backend_dir = Path("backend")
     venv_dir = backend_dir / ".venv"
@@ -83,9 +70,15 @@ def setup_project():
     run_cmd([str(python_venv), "-m", "ensurepip", "--upgrade"])
 
     is_windows = platform.system() == "Windows"
-    pip_exe = (
-        venv_dir / "Scripts" / "pip.exe" if is_windows else venv_dir / "bin" / "pip"
+
+    python_exe = (
+        venv_dir / "Scripts" / "python.exe"
+        if is_windows
+        else venv_dir / "bin" / "python"
     )
+
+    print("Ensuring pip is installed...")
+    run_cmd([str(python_exe), "-m", "ensurepip", "--upgrade"])
 
     print("Installing Python dependencies...")
     run_cmd([
