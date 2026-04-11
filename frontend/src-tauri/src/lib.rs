@@ -1,11 +1,13 @@
 use std::process::{Command, Child};
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use tauri::{Manager, WindowEvent};
+
+struct BackendProcess(pub Mutex<Option<Child>>);
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .manage(Arc::new(Mutex::new(None::<Child>)))
+        .manage(BackendProcess(Mutex::new(None)))
         .setup(|app| {
             #[cfg(all(not(debug_assertions), target_os = "windows"))]
             {
@@ -19,10 +21,7 @@ pub fn run() {
                     .spawn()
                     .expect("failed to spawn backend.exe");
 
-                let state = app.state::<Arc<Mutex<Option<Child>>>>();
-                if let Ok(mut backend_lock) = state.lock() {
-                    *backend_lock = Some(child);
-                }
+                *app.state::<BackendProcess>().0.lock().unwrap() = Some(child);
             }
 
             Ok(())
@@ -34,23 +33,23 @@ pub fn run() {
                 let app_handle = window.app_handle().clone(); 
 
                 std::thread::spawn(move || {
-                    if let Ok(mut process_lock) = BACKEND_PROCESS.lock() {
-                        #[allow(unused_mut)]
-                        if let Some(mut child) = process_lock.take() {
-                            
-                            #[cfg(target_os = "windows")]
-                            {
-                                let pid = child.id();
-                                let _ = Command::new("taskkill")
-                                    .args(["/F", "/T", "/PID", &pid.to_string()])
-                                    .output();
-                            }
+                    let optional_child = app_handle.state::<BackendProcess>().0.lock().unwrap().take();
+                    
+                    #[allow(unused_mut)]
+                    if let Some(mut child) = optional_child {
+                        
+                        #[cfg(target_os = "windows")]
+                        {
+                            let pid = child.id();
+                            let _ = Command::new("taskkill")
+                                .args(["/F", "/T", "/PID", &pid.to_string()])
+                                .output();
+                        }
 
-                            #[cfg(not(target_os = "windows"))]
-                            {
-                                let _ = child.kill();
-                                let _ = child.wait();
-                            }
+                        #[cfg(not(target_os = "windows"))]
+                        {
+                            let _ = child.kill();
+                            let _ = child.wait();
                         }
                     }
 
