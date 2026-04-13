@@ -16,7 +16,7 @@ const AuthPage: React.FC = () => {
       try {
         const appWindow = getCurrentWindow(); 
         await appWindow.setResizable(false);
-        await appWindow.setSize(new LogicalSize(420, 650));
+        await appWindow.setSize(new LogicalSize(420, 750));
         await appWindow.center();
       } catch (error) {
         console.error("Failed to shrink window:", error);
@@ -121,8 +121,8 @@ const AuthPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-0 font-sans text-slate-900">
       
-      <div className="w-full max-w-[420px] h-[650px] bg-white shadow-2xl flex flex-col overflow-hidden transition-all duration-300">
-        
+      <div className="w-full max-w-[420px] h-screen bg-white shadow-2xl flex flex-col overflow-hidden transition-all duration-300">
+
         <div className="bg-[#0f172a] py-10 px-6 flex flex-col items-center justify-center relative">
           
           <div className="relative">
@@ -137,7 +137,7 @@ const AuthPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="p-10 flex-1 flex flex-col"> 
+        <div className="px-8 py-6 flex-1 flex flex-col overflow-y-auto">
           {viewMode === 'FORGOT_PASSWORD' ? (
             <div className="text-center space-y-6 py-4 flex-1 flex flex-col justify-center">
               <h2 className="text-xl font-bold text-[#0f172a]">Work in progress</h2>
@@ -150,7 +150,7 @@ const AuthPage: React.FC = () => {
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-5 flex-1 flex flex-col justify-center">
+            <form onSubmit={handleSubmit} className="space-y-5 flex flex-col justify-center mb-6">
               
               {viewMode === 'LOGIN' && (
                 <>
