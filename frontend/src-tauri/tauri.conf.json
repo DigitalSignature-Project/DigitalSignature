@@ -13,9 +13,9 @@
     "windows": [
       {
         "title": "Digital Signature",
-        "width": 1000,
-        "height": 800,
-        "resizable": true,
+        "width": 450,
+        "height": 700,
+        "resizable": false,
         "fullscreen": false
       }
     ],
