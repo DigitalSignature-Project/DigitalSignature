@@ -130,7 +130,7 @@ def setup_project():
     with open(vscode_dir / "launch.json", "w", encoding="utf-8") as f:
         json.dump(launch_json, f, indent=4, ensure_ascii=False)
 
-    print_success("Configuration complete! You can now press F5 in VS Code.")
+    print_success("Configuration complete! You can now build application.")
 
 
 def build_project():
