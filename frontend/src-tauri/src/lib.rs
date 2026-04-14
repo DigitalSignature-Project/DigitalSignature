@@ -8,7 +8,7 @@ struct BackendProcess(pub Mutex<Option<Child>>);
 pub fn run() {
     tauri::Builder::default()
         .manage(BackendProcess(Mutex::new(None)))
-        .setup(|_app| {
+        .setup(|app| {
             #[cfg(all(not(debug_assertions), target_os = "windows"))]
             {
                 let exe_path = std::env::current_exe()
