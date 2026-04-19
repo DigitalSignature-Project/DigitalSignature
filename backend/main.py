@@ -14,7 +14,7 @@ async def register_new_user():
     response_register_new_user = httpx.post(
         "https://digital-signature-auth.digitalsignature-auth.workers.dev/api/register",
         json={
-            "login": "johndoe1",
+            "login": "johndoe12",
             "password_hash": "hashed_password_string",
             "public_key": "public_key_string",
             "encrypted_private_key": "aes_encrypted_private_key_blob"
