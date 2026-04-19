@@ -24,11 +24,7 @@ if getattr(sys, "frozen", False):
 else:
     base_path = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
-app.mount(
-    "/static",
-    StaticFiles(directory=str(base_path), html=True),
-    name="frontend"
-)
+app.mount("/static", StaticFiles(directory=str(base_path), html=True), name="frontend")
 
 app.include_router(spa_router.router)
 app.include_router(crypto_router.router, prefix="/api")
