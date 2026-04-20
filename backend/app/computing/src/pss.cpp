@@ -6,6 +6,13 @@
 
 namespace digisign {
 
+
+PSSConfig::PSSConfig(int salt_length, std::function<std::vector<uint8_t>(const std::vector<uint8_t>&)> hash_function, std::function<std::vector<uint8_t>(const std::vector<uint8_t>&)> MGF1_hash) {
+    this->salt_length = salt_length;
+    this->hash_function = hash_function;
+    this->MGF1_hash = MGF1_hash;
+}
+
 std::vector<uint8_t> xor_bytes(const std::vector<uint8_t>& a, const std::vector<uint8_t>& b) {
     std::vector<uint8_t> result(a.size());
 
@@ -32,8 +39,8 @@ std::vector<uint8_t> build_db(const std::vector<uint8_t>& salt, size_t emLen, si
     return DB;
 }
 
-std::vector<uint8_t> MGF1(const std::vector<uint8_t>& seed, size_t maskLen) {
-    static const size_t hashLen = 32;
+std::vector<uint8_t> MGF1(const std::vector<uint8_t>& seed, size_t maskLen, std::function<std::vector<uint8_t>(const std::vector<uint8_t>&)> hash_function) {
+    const size_t hashLen = hash_function(seed).size();
 
     std::vector<uint8_t> mask;
     mask.reserve(maskLen);
@@ -52,8 +59,7 @@ std::vector<uint8_t> MGF1(const std::vector<uint8_t>& seed, size_t maskLen) {
         data.push_back((counter >> 8) & 0xFF);
         data.push_back(counter & 0xFF);
 
-        // hash
-        auto h = sha256(data);
+        auto h = hash_function(data);
 
         mask.insert(mask.end(), h.begin(), h.end());
     }
@@ -92,16 +98,17 @@ std::vector<uint8_t> build_em(const std::vector<uint8_t>& maskedDB, const std::v
     return EM;
 }
 
-std::vector<uint8_t> pss_encode(const std::string& message, size_t emLen, const BigInt& n) {
-    const size_t hashLen = 32;
-    const size_t saltLen = 32;
+std::vector<uint8_t> pss_encode(const std::string& message, size_t emLen, const BigInt& n, const PSSConfig& pss_config) {
+    const size_t saltLen = pss_config.salt_length;
+
+    std::vector<uint8_t> messageBytes(message.begin(), message.end());
+    auto mHash = pss_config.hash_function(messageBytes);
+
+    const size_t hashLen = mHash.size();
 
     if (emLen < hashLen + saltLen + 2) {
         throw std::runtime_error("Encoded message length too short");
     }
-
-    std::vector<uint8_t> messageBytes(message.begin(), message.end());
-    auto mHash = sha256(messageBytes);
 
     std::vector<uint8_t> salt(saltLen);
     if (RAND_bytes(salt.data(), saltLen) != 1) {
@@ -109,14 +116,14 @@ std::vector<uint8_t> pss_encode(const std::string& message, size_t emLen, const 
     }
 
     std::vector<uint8_t> M_prime(8, 0x00); // 8 zer
-    M_prime.insert(M_prime.end(), mHash.begin(), mHash.end());
+    M_prime.insert(M_prime.end(), mHash.begin(), mHash.end());  
     M_prime.insert(M_prime.end(), salt.begin(), salt.end());
 
-    auto H = sha256(M_prime);
+    auto H = pss_config.hash_function(M_prime);
 
     auto DB = build_db(salt, emLen, hashLen);
 
-    auto dbMask = MGF1(H, DB.size());
+    auto dbMask = MGF1(H, DB.size(), pss_config.MGF1_hash);
 
     auto maskedDB = xor_bytes(DB, dbMask);
 
@@ -127,9 +134,9 @@ std::vector<uint8_t> pss_encode(const std::string& message, size_t emLen, const 
     return EM;
 }
 
-bool pss_decode(const std::vector<uint8_t>& EM, const std::vector<uint8_t>& mHash, size_t emLen, const BigInt& n) {
-    const size_t hashLen = 32;
-    const size_t saltLen = 32;
+bool pss_decode(const std::vector<uint8_t>& EM, const std::vector<uint8_t>& mHash, size_t emLen, const BigInt& n, const PSSConfig& pss_config) {
+    const size_t hashLen = pss_config.hash_function(EM).size();
+    const size_t saltLen = pss_config.salt_length;
 
     if (EM.size() != emLen) return false;
 
@@ -142,7 +149,7 @@ bool pss_decode(const std::vector<uint8_t>& EM, const std::vector<uint8_t>& mHas
 
     apply_embit_mask(maskedDB, emLen, n);
 
-    auto dbMask = MGF1(H, maskedDB.size());
+    auto dbMask = MGF1(H, maskedDB.size(), pss_config.MGF1_hash);
     auto DB = xor_bytes(maskedDB, dbMask);
 
     apply_embit_mask(DB, emLen, n);
@@ -158,20 +165,20 @@ bool pss_decode(const std::vector<uint8_t>& EM, const std::vector<uint8_t>& mHas
     std::vector<uint8_t> salt(DB.begin() + psEnd + 1, DB.end());
 
     std::vector<uint8_t> M_prime(8, 0x00);
-    auto mHashCheck = sha256(mHash); 
+    auto mHashCheck = pss_config.hash_function(mHash);
 
     M_prime.insert(M_prime.end(), mHashCheck.begin(), mHashCheck.end());
     M_prime.insert(M_prime.end(), salt.begin(), salt.end());
 
-    auto H_prime = sha256(M_prime);
+    auto H_prime = pss_config.hash_function(M_prime);
 
     return H == H_prime;
 }
 
-std::vector<uint8_t> digital_signature(const std::string& message, const BigInt& priv_key, const BigInt& n) {
+std::vector<uint8_t> digital_signature(const std::string& message, const BigInt& priv_key, const BigInt& n, const PSSConfig& pss_config) {
     int bits = n.used * 64 / 8;
 
-    std::vector<uint8_t> pss = pss_encode(message, bits, n);
+    std::vector<uint8_t> pss = pss_encode(message, bits, n, pss_config);
 
     BigInt bipss = BigInt::vectoruint8(pss);
 
@@ -180,8 +187,7 @@ std::vector<uint8_t> digital_signature(const std::string& message, const BigInt&
     return bisign.to_vectoruint8();
 }
 
-bool verify(const std::string& message, const std::vector<uint8_t>& signature, const BigInt& pub_key, const BigInt& n) {
-    const size_t hashLen = 32;
+bool verify(const std::string& message, const std::vector<uint8_t>& signature, const BigInt& e, const BigInt& n, const PSSConfig& pss_config) {
     const size_t emBits = n.bit_length() - 1;
     const size_t emLen = (emBits + 7) / 8;
 
@@ -191,7 +197,7 @@ bool verify(const std::string& message, const std::vector<uint8_t>& signature, c
 
     BigInt s = BigInt::vectoruint8(signature);
 
-    BigInt m = decrypt(s, pub_key, n);
+    BigInt m = decrypt(s, e, n);
 
     std::vector<uint8_t> EM = m.to_vectoruint8();
 
@@ -207,7 +213,7 @@ bool verify(const std::string& message, const std::vector<uint8_t>& signature, c
 
     std::vector<uint8_t> mHash(message.begin(), message.end());
 
-    return pss_decode(EM, mHash, emLen, n);
+    return pss_decode(EM, mHash, emLen, n, pss_config);
 }
 
 }
