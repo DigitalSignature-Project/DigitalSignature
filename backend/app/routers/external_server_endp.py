@@ -49,9 +49,9 @@ async def verify_user_login(data: VerifyUserLogin) -> VerifyUserLoginResponse:
     response_data = response.json()
 
     return VerifyUserLoginResponse(
-        message=response_data.get("message"),
-        encrypted_private_key=response_data.get("encrypted_private_key"),
-        public_key=response_data.get("public_key"),
+        message=response_data.get("message", ""),
+        encrypted_private_key=response_data.get("encrypted_private_key", ""),
+        public_key=response_data.get("public_key", ""),
     )
 
 
