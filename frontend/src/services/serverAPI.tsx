@@ -1,4 +1,5 @@
 import axios from "axios";
+import { LogIn } from "lucide-react";
 
 type VerifyUserLogin = {
   login: string;
@@ -9,6 +10,17 @@ type VerifyUserLoginResponse = {
   message: string;
   encrypted_private_key: string;
   public_key: string;
+};
+
+type RegiserNewUser = {
+  login: string;
+  password_hash: string;
+  public_key: string;
+  encrypted_private_key: string;
+};
+
+type RegisterNewUserResponse = {
+  status_code: string;
 };
 
 export const verifyUserLogin = async (credentials: VerifyUserLogin) => {
@@ -26,4 +38,23 @@ export const verifyUserLogin = async (credentials: VerifyUserLogin) => {
   );
 
   return data.message === "Login successful" ? true : false;
+};
+
+export const registerNewUser = async (credentials: RegiserNewUser) => {
+  const { data } = await axios.post<RegisterNewUserResponse>(
+    "http://127.0.0.1:2138/server/register_new_user",
+    {
+      login: credentials.login,
+      password_hash: credentials.password_hash,
+      public_key: credentials.public_key,
+      encrypted_private_key: credentials.encrypted_private_key,
+    },
+    {
+      headers: {
+        Authorization: "Bearer 2137",
+      },
+    },
+  );
+
+  return Number(data.status_code) === 201 ? true : false;
 };

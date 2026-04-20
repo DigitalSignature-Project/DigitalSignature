@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Lock, Shield, Key } from "lucide-react";
 import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
-import { verifyUserLogin } from "../services/serverAPI";
+import { registerNewUser, verifyUserLogin } from "../services/serverAPI";
 
 type ViewMode =
   | "LOGIN"
@@ -105,8 +105,15 @@ const AuthPage: React.FC = () => {
         return;
       }
 
-      // Placeholder for backend logic: check if user already exists
-      const response = true;
+      const credentials = {
+        login: formData.login,
+        password_hash: formData.password,
+        public_key: "public_key_string",
+        encrypted_private_key: "aes_encrypted_private_key_blob",
+      };
+
+      const response = await registerNewUser(credentials);
+
       if (response) {
         changeView("REGISTER_2");
       } else {
