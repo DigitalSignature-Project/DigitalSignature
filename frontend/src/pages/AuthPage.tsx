@@ -74,7 +74,7 @@ const AuthPage: React.FC = () => {
 
       const response = await verifyUserLogin(credentials);
 
-      if (response) {
+      if (response.success) {
         changeView("LOGIN_PASSPHRASE");
       } else {
         setErrorMessage("Login failed: Invalid credentials.");

@@ -36,7 +36,11 @@ export const verifyUserLogin = async (credentials: VerifyUserLogin) => {
     },
   );
 
-  return data.message === "Login successful" ? true : false;
+  if (data.message === "Login successful") {
+    return { success: true, data };
+  }
+
+  return { success: false, message: data.message };
 };
 
 export const registerNewUser = async (credentials: RegiserNewUser) => {
