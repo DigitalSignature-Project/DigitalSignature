@@ -1,5 +1,4 @@
 import axios from "axios";
-import { LogIn } from "lucide-react";
 
 type VerifyUserLogin = {
   login: string;
