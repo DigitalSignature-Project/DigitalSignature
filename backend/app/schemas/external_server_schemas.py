@@ -19,7 +19,7 @@ class VerifyUserLoginResponse(BaseModel):
 
 
 class VerifyUserLogin(BaseModel):
-    login: set
+    login: str
     password_hash: str
 
 
