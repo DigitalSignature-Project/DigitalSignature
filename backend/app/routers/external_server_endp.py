@@ -1,5 +1,5 @@
 import httpx
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.encryption import encrypt, decrypt_bool
 from app.auth import verify_token
@@ -12,6 +12,8 @@ from app.schemas.external_server_schemas import (
     KeyUpdate,
     KeyUpdateResponse,
     ServerStatusResponse,
+    CheckUserKey,
+    CheckUserKeyResponse,
 )
 
 router = APIRouter(dependencies=[Depends(verify_token)])
@@ -19,8 +21,10 @@ router = APIRouter(dependencies=[Depends(verify_token)])
 
 @router.post("/register_new_user", response_model=RegisterNewUserResponse)
 async def register_new_user(data: RegisterNewUser) -> RegisterNewUserResponse:
-    encrypted_private_key: str = encrypt(data.encrypted_private_key, data.private_key_user_password)
-    
+    encrypted_private_key: str = encrypt(
+        data.encrypted_private_key, data.private_key_user_password
+    )
+
     payload: dict[str, str] = {
         "login": data.login,
         "password_hash": data.password_hash,
@@ -71,9 +75,9 @@ async def retrieve_public_key(login: str) -> RetrievePublicKeyResponse:
     response_data = response.json()
 
     return RetrievePublicKeyResponse(
-        login=response_data.get("login", ""), 
+        login=response_data.get("login", ""),
         public_key=response_data.get("public_key", ""),
-        key_module=response_data.get("key_module", "")
+        key_module=response_data.get("key_module", ""),
     )
 
 
@@ -106,3 +110,24 @@ async def server_status() -> ServerStatusResponse:
         )
 
     return ServerStatusResponse(status=response.status_code)
+
+
+@router.post("/check_user_key", response_model=CheckUserKeyResponse)
+async def check_user_key(data: CheckUserKey) -> CheckUserKeyResponse:
+    payload: dict[str, str] = {"login": data.login, "password_hash": data.password_hash}
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://digital-signature-auth.digitalsignature-auth.workers.dev/api/login",
+            json=payload,
+            headers={"Content-Type": "application/json"},
+        )
+
+    response_data = response.json()
+    decrypt_status: bool = decrypt_bool(
+        response_data.get("encrypted_private_key", ""), data.key
+    )
+
+    if decrypt_status:
+        return CheckUserKeyResponse(status=200)
+    raise HTTPException(status_code=401, detail="Invalid key")

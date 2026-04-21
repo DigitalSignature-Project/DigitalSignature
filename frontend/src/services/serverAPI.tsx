@@ -25,6 +25,16 @@ type RegisterNewUserResponse = {
   status_code: string;
 };
 
+type CheckUserKeyResponse = {
+  status: string;
+};
+
+type CheckUserKey = {
+  login: string;
+  password_hash: string;
+  key: string;
+};
+
 export const verifyUserLogin = async (credentials: VerifyUserLogin) => {
   const { data } = await axios.post<VerifyUserLoginResponse>(
     "http://127.0.0.1:2138/server/verify_user_login",
@@ -65,4 +75,22 @@ export const registerNewUser = async (credentials: RegiserNewUser) => {
   );
 
   return Number(data.status_code) === 201 ? true : false;
+};
+
+export const checkUserKey = async (credentials: CheckUserKey) => {
+  const { data } = await axios.post<CheckUserKeyResponse>(
+    "http://127.0.0.1:2138/server/check_user_key",
+    {
+      login: credentials.login,
+      password_hash: credentials.password_hash,
+      key: credentials.key,
+    },
+    {
+      headers: {
+        Authorization: "Bearer 2137",
+      },
+    },
+  );
+
+  return Number(data.status) === 200 ? true : false;
 };

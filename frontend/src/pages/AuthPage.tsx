@@ -2,7 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Lock, Shield, Key } from "lucide-react";
 import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
-import { registerNewUser, verifyUserLogin } from "../services/serverAPI";
+import {
+  checkUserKey,
+  registerNewUser,
+  verifyUserLogin,
+} from "../services/serverAPI";
 import { calculateRsaParallel } from "../services/rsaAPI";
 
 type ViewMode =
@@ -84,8 +88,13 @@ const AuthPage: React.FC = () => {
     }
 
     if (viewMode === "LOGIN_PASSPHRASE") {
-      // Placeholder for backend logic: verify private key passphrase
-      const response = true;
+      const credentials = {
+        login: formData.login,
+        password_hash: formData.password,
+        key: formData.keyPassphrase,
+      };
+
+      const response = await checkUserKey(credentials);
 
       if (response) {
         finalizeAuth();
@@ -96,7 +105,6 @@ const AuthPage: React.FC = () => {
     }
 
     if (viewMode === "REGISTER_1") {
-      // Local validation (stays on the frontend)
       if (formData.login !== formData.repeatLogin) {
         setErrorMessage("Logins do not match!");
         return;

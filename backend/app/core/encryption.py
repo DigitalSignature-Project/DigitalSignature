@@ -32,9 +32,9 @@ def encrypt(data: str, password: str) -> str:
         "n": base64.b64encode(nonce).decode(),
         "c": base64.b64encode(ciphertext).decode(),
     }
-    
+
     json_str = json.dumps(payload)
-    
+
     return base64.b64encode(json_str.encode()).decode()
 
 
@@ -53,8 +53,7 @@ def decrypt(token: str, password: str) -> str:
 
     return decrypted.decode()
 
-    
-    
+
 def decrypt_bool(token: str, password: str) -> bool:
     try:
         json_str = base64.b64decode(token).decode()

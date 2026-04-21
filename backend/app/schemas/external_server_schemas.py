@@ -46,3 +46,13 @@ class KeyUpdate(BaseModel):
 
 class ServerStatusResponse(BaseModel):
     status: int
+
+
+class CheckUserKeyResponse(BaseModel):
+    status: int
+
+
+class CheckUserKey(BaseModel):
+    login: str
+    password_hash: str
+    key: str
