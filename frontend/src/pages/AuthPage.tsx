@@ -106,18 +106,14 @@ const AuthPage: React.FC = () => {
         return;
       }
 
-      const rsa_response = await calculateRsaParallel(1024, 4);
-
       const credentials = {
         login: formData.login,
-        password_hash: formData.password,
-        public_key: rsa_response.key_pub,
-        encrypted_private_key: rsa_response.key_priv,
+        password_hash: formData.login,
       };
 
-      const response = await registerNewUser(credentials);
+      const response = await verifyUserLogin(credentials);
 
-      if (response) {
+      if (!response.success) {
         changeView("REGISTER_2");
       } else {
         setErrorMessage("User with this login already exists.");
@@ -126,14 +122,24 @@ const AuthPage: React.FC = () => {
     }
 
     if (viewMode === "REGISTER_2") {
-      // Local validation
       if (formData.keyPassphrase !== formData.repeatKeyPassphrase) {
         setErrorMessage("Key passphrases do not match!");
         return;
       }
 
-      // Placeholder for backend logic: send complete data to the database
-      const response = true;
+      const rsa_response = await calculateRsaParallel(1024, 4);
+
+      const credentials = {
+        login: formData.login,
+        password_hash: formData.password,
+        public_key: rsa_response.key_pub,
+        encrypted_private_key: rsa_response.key_priv,
+        key_module: rsa_response.key_module,
+        private_key_user_password: formData.keyPassphrase,
+      };
+
+      const response = await registerNewUser(credentials);
+
       if (response) {
         finalizeAuth();
       } else {

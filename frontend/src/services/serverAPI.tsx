@@ -9,6 +9,7 @@ type VerifyUserLoginResponse = {
   message: string;
   encrypted_private_key: string;
   public_key: string;
+  key_module: string;
 };
 
 type RegiserNewUser = {
@@ -16,6 +17,8 @@ type RegiserNewUser = {
   password_hash: string;
   public_key: string;
   encrypted_private_key: string;
+  key_module: string;
+  private_key_user_password: string;
 };
 
 type RegisterNewUserResponse = {
@@ -51,6 +54,8 @@ export const registerNewUser = async (credentials: RegiserNewUser) => {
       password_hash: credentials.password_hash,
       public_key: credentials.public_key,
       encrypted_private_key: credentials.encrypted_private_key,
+      key_module: credentials.key_module,
+      private_key_user_password: credentials.private_key_user_password,
     },
     {
       headers: {
