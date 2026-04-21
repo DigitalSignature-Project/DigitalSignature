@@ -22,18 +22,10 @@ async def rsa_generate_keys(data: RsaKey) -> RsaKeyResponse:
 
     generate_rsa_key.rsa_generate_keys(key_pub, key_priv, key_module, bits)
 
-    # TODO
-    print("key pub limbs")
-    print(key_pub.limbs)
-    print("key priv limnbs")
-    print(key_priv.limbs)
-    print("key_module")
-    print(key_module.limbs)
-
     return RsaKeyResponse(
-        key_pub="app works correctly",
-        key_priv="app works correctly",
-        key_module="app works correctly",
+        key_pub=key_pub.to_hex(False),
+        key_priv=key_priv.to_hex(False),
+        key_module=key_module.to_hex(False),
     )
 
 
@@ -50,16 +42,8 @@ async def rsa_generate_keys_parallel(data: RsaKeyParallel) -> RsaKeyParallelResp
         key_pub, key_priv, key_module, bits, threads
     )
 
-    # TODO
-    print("key pub limbs")
-    print(key_pub.limbs)
-    print("key priv limnbs")
-    print(key_priv.limbs)
-    print("key_module")
-    print(key_module.limbs)
-
     return RsaKeyParallelResponse(
-        key_pub="app works correctly P",
-        key_priv="app works correctly P",
-        key_module="app works correctly P",
+        key_pub=key_pub.to_hex(False),
+        key_priv=key_priv.to_hex(False),
+        key_module=key_module.to_hex(False),
     )

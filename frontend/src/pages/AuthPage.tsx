@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { User, Lock, Shield, Key } from "lucide-react";
 import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
 import { registerNewUser, verifyUserLogin } from "../services/serverAPI";
+import { calculateRsaParallel } from "../services/rsaAPI";
 
 type ViewMode =
   | "LOGIN"
@@ -105,11 +106,13 @@ const AuthPage: React.FC = () => {
         return;
       }
 
+      const rsa_response = await calculateRsaParallel(1024, 4);
+
       const credentials = {
         login: formData.login,
         password_hash: formData.password,
-        public_key: "public_key_string",
-        encrypted_private_key: "aes_encrypted_private_key_blob",
+        public_key: rsa_response.key_pub,
+        encrypted_private_key: rsa_response.key_priv,
       };
 
       const response = await registerNewUser(credentials);
