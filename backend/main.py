@@ -29,6 +29,9 @@ if __name__ == "__main__":
 # else:
 #     print("podpis nieprawidlowy")
 
+# print(key_pub.to_hex(False))
+# print(DigiSign.BigInt.from_hex(key_pub.to_hex(False)))
+
 
 # from cryptography.hazmat.primitives.asymmetric import rsa, padding
 # from cryptography.hazmat.primitives import hashes

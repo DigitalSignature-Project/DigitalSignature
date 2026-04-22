@@ -14,6 +14,8 @@ struct BigInt {
 
 	static BigInt uint64(uint64_t number);
 	static BigInt vectoruint8(const std::vector<uint8_t>& v);
+	static BigInt from_hex(const std::string& s);
+	static BigInt from_base64(const std::string& s);
 	static BigInt one();
 	static BigInt two();
 

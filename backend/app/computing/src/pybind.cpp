@@ -12,13 +12,14 @@ void bind_bigint(pybind11::module_ &m) {
     .def_readwrite("limbs", &digisign::BigInt::limbs)
     .def_readwrite("used", &digisign::BigInt::used)
     .def("to_hex", &digisign::BigInt::to_hex, "converts BigInt to string in hex format")
-    .def("to_base64", &digisign::BigInt::to_base64, "converts BigInt to string in base64 format")
+    .def("to_base64", &digisign::BigInt::to_base64, "converts BigInt to string in base64 format", pybind11::arg("remove_leading_zeros") = false)
     .def("to_bytes", &digisign::BigInt::to_vectoruint8, "converts BigInt to byte vector")
-    .def_static("from_bytes", &digisign::BigInt::vectoruint8, "converts to byte vector to BigInt");
+    .def_static("from_bytes", &digisign::BigInt::vectoruint8, "converts byte vector to BigInt")
+    .def_static("from_hex", &digisign::BigInt::from_hex, "converts string in hex format to BigInt")
+    .def_static("from_base64", &digisign::BigInt::from_base64, "converts string in base64 format to BigInt");
 }
 
 void bind_rsa(pybind11::module_ &rsa) {
-
     pybind11::class_<digisign::PSSConfig>(rsa, "PSSConfig")
     .def(pybind11::init([](int salt_length, pybind11::function hash_function, pybind11::function MGF1) {
 
@@ -54,7 +55,9 @@ void bind_hash(pybind11::module_ &hash) {
 
 void bind_format(pybind11::module_ &format) {
     format.def("bytes_to_hex", &digisign::bytes_to_hex, "converts byte vector to string in hex format");
-    format.def("base64_encode", &digisign::base64_encode, "converts byte vector to string in base64 format");
+    format.def("bytes_to_base64", &digisign::base64_encode, "converts byte vector to string in base64 format");
+    format.def("hex_to_bytes", &digisign::base64_encode, "converts string in hex format to byte vector");
+    format.def("base64_to_bytes", &digisign::base64_encode, "converts string in base64 format to byte vector");
 }
 
 
