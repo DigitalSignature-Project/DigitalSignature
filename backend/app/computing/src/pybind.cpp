@@ -4,6 +4,7 @@
 #include <digisign/format.h>
 #include <digisign/pss.h>
 #include <digisign/sha256.h>
+#include <digisign/sha3.h>
 
 
 void bind_bigint(pybind11::module_ &m) {
@@ -52,6 +53,10 @@ void bind_rsa(pybind11::module_ &rsa) {
 void bind_hash(pybind11::module_ &hash) {
     hash.def("SHA256", pybind11::overload_cast<const std::string&>(&digisign::sha256), "SHA256 hash function for string");
     hash.def("SHA256", pybind11::overload_cast<const std::vector<uint8_t>&>(&digisign::sha256), "SHA256 hash function for bytes");
+    hash.def("SHA3_256", pybind11::overload_cast<const std::string&>(&digisign::sha3_256), "SHA3-256 hash function for string");
+    hash.def("SHA3_256", pybind11::overload_cast<const std::vector<uint8_t>&>(&digisign::sha3_256), "SHA3-256 hash function for bytes");
+    hash.def("SHA3_512", pybind11::overload_cast<const std::string&>(&digisign::sha3_512), "SHA3-512 hash function for string");
+    hash.def("SHA3_512", pybind11::overload_cast<const std::vector<uint8_t>&>(&digisign::sha3_512), "SHA3-512 hash function for bytes");
 }
 
 void bind_format(pybind11::module_ &format) {

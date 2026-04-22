@@ -115,7 +115,7 @@ std::vector<uint8_t> pss_encode(const std::string& message, size_t emLen, const 
         throw std::runtime_error("CSPRNG failure");
     }
 
-    std::vector<uint8_t> M_prime(8, 0x00); // 8 zer
+    std::vector<uint8_t> M_prime(8, 0x00);
     M_prime.insert(M_prime.end(), mHash.begin(), mHash.end());  
     M_prime.insert(M_prime.end(), salt.begin(), salt.end());
 
