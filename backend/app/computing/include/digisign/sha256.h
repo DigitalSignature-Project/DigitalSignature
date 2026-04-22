@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <string>
 
 namespace digisign {
 
@@ -26,5 +27,7 @@ void expand_w(std::vector<uint32_t>& W);
 void compress_block(std::vector<uint32_t>& H, const std::vector<uint32_t>& W);
 
 std::vector<uint8_t> sha256(const std::vector<uint8_t>& message);
+
+std::string sha256(const std::string& message);
 
 }

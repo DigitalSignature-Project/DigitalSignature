@@ -50,7 +50,8 @@ void bind_rsa(pybind11::module_ &rsa) {
 }
 
 void bind_hash(pybind11::module_ &hash) {
-    hash.def("SHA256", &digisign::sha256, "SHA256 Hash function");
+    hash.def("SHA256", pybind11::overload_cast<const std::string&>(&digisign::sha256), "SHA256 hash function for string");
+    hash.def("SHA256", pybind11::overload_cast<const std::vector<uint8_t>&>(&digisign::sha256), "SHA256 hash function for bytes");
 }
 
 void bind_format(pybind11::module_ &format) {

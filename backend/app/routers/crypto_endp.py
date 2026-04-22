@@ -21,7 +21,7 @@ async def rsa_generate_keys(data: RsaKey) -> RsaKeyResponse:
     bits: int = data.bits
 
     DigiSign.RSA.rsa_generate_keys(key_pub, key_priv, key_module, bits)
-    
+
     return RsaKeyResponse(
         key_pub=key_pub.to_hex(),
         key_priv=key_priv.to_hex(),
