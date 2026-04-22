@@ -11,8 +11,8 @@ void bind_bigint(pybind11::module_ &m) {
     .def(pybind11::init<>())
     .def_readwrite("limbs", &digisign::BigInt::limbs)
     .def_readwrite("used", &digisign::BigInt::used)
-    .def("to_hex", &digisign::BigInt::to_hex, "converts BigInt to string in hex format")
-    .def("to_base64", &digisign::BigInt::to_base64, "converts BigInt to string in base64 format", pybind11::arg("remove_leading_zeros") = false)
+    .def("to_hex", &digisign::BigInt::to_hex, "converts BigInt to string in hex format", pybind11::arg("remove_leading_zeros") = false)
+    .def("to_base64", &digisign::BigInt::to_base64, "converts BigInt to string in base64 format")
     .def("to_bytes", &digisign::BigInt::to_vectoruint8, "converts BigInt to byte vector")
     .def_static("from_bytes", &digisign::BigInt::vectoruint8, "converts byte vector to BigInt")
     .def_static("from_hex", &digisign::BigInt::from_hex, "converts string in hex format to BigInt")
@@ -50,7 +50,8 @@ void bind_rsa(pybind11::module_ &rsa) {
 }
 
 void bind_hash(pybind11::module_ &hash) {
-    hash.def("SHA256", &digisign::sha256, "SHA256 Hash function");
+    hash.def("SHA256", pybind11::overload_cast<const std::string&>(&digisign::sha256), "SHA256 hash function for string");
+    hash.def("SHA256", pybind11::overload_cast<const std::vector<uint8_t>&>(&digisign::sha256), "SHA256 hash function for bytes");
 }
 
 void bind_format(pybind11::module_ &format) {

@@ -1,6 +1,7 @@
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.computing.build.Release import DigiSign
 from app.core.encryption import encrypt, decrypt_bool
 from app.auth import verify_token
 from app.schemas.external_server_schemas import (
@@ -25,9 +26,11 @@ async def register_new_user(data: RegisterNewUser) -> RegisterNewUserResponse:
         data.encrypted_private_key, data.private_key_user_password
     )
 
+    hashed_password = DigiSign.HASH.SHA256(data.password_hash)
+
     payload: dict[str, str] = {
         "login": data.login,
-        "password_hash": data.password_hash,
+        "password_hash": hashed_password,
         "public_key": data.public_key,
         "encrypted_private_key": encrypted_private_key,
         "key_module": data.key_module,
@@ -45,7 +48,8 @@ async def register_new_user(data: RegisterNewUser) -> RegisterNewUserResponse:
 
 @router.post("/verify_user_login", response_model=VerifyUserLoginResponse)
 async def verify_user_login(data: VerifyUserLogin) -> VerifyUserLoginResponse:
-    payload: dict[str, str] = {"login": data.login, "password_hash": data.password_hash}
+    hashed_password = DigiSign.HASH.SHA256(data.password_hash)
+    payload: dict[str, str] = {"login": data.login, "password_hash": hashed_password}
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
@@ -83,9 +87,11 @@ async def retrieve_public_key(login: str) -> RetrievePublicKeyResponse:
 
 @router.post("/key_update", response_model=KeyUpdateResponse)
 async def key_update(data: KeyUpdate) -> KeyUpdateResponse:
+    hashed_password = DigiSign.HASH.SHA256(data.password_hash)
+
     payload: dict[str, str] = {
         "login": data.login,
-        "password_hash": data.password_hash,
+        "password_hash": hashed_password,
         "new_public_key": data.new_public_key,
         "new_encrypted_private_key": data.new_encrypted_private_key,
         "new_key_module": data.new_key_module,
@@ -114,7 +120,8 @@ async def server_status() -> ServerStatusResponse:
 
 @router.post("/check_user_key", response_model=CheckUserKeyResponse)
 async def check_user_key(data: CheckUserKey) -> CheckUserKeyResponse:
-    payload: dict[str, str] = {"login": data.login, "password_hash": data.password_hash}
+    hashed_password = DigiSign.HASH.SHA256(data.password_hash)
+    payload: dict[str, str] = {"login": data.login, "password_hash": hashed_password}
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
