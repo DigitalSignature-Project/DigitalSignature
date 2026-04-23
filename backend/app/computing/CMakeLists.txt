@@ -23,6 +23,7 @@ pybind11_add_module(DigiSign
     src/pss.cpp
     src/sha256.cpp
     src/pybind.cpp
+    src/sha3.cpp
 )
 
 # include
