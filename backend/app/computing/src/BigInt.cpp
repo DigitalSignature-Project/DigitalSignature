@@ -424,4 +424,14 @@ std::string BigInt::to_base64() const {
     return base64_encode(this->to_vectoruint8());
 }
 
+BigInt BigInt::from_hex(const std::string& s)
+{
+    return vectoruint8(hex_to_bytes(s));
+}
+
+BigInt BigInt::from_base64(const std::string& s)
+{
+    return vectoruint8(base64_to_bytes(s));
+}
+
 }

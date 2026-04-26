@@ -1,4 +1,5 @@
 #include <digisign/sha256.h>
+#include <digisign/format.h>
 
 namespace digisign {
 
@@ -158,6 +159,11 @@ std::vector<uint8_t> sha256(const std::vector<uint8_t>& message) {
     }
 
     return hash;
+}
+
+std::string sha256(const std::string& message) {
+    std::vector<uint8_t> msgbytes(message.begin(), message.end());
+    return bytes_to_hex(sha256(msgbytes));
 }
 
 }
