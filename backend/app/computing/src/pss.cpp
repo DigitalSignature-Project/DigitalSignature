@@ -3,6 +3,7 @@
 #include <iostream>
 #include <openssl/rand.h>
 #include <digisign/rsa.h>
+#include <digisign/format.h>
 
 namespace digisign {
 
@@ -214,6 +215,10 @@ bool verify(const std::string& message, const std::vector<uint8_t>& signature, c
     std::vector<uint8_t> mHash(message.begin(), message.end());
 
     return pss_decode(EM, mHash, emLen, n, pss_config);
+}
+
+bool verify(const std::string& message, const std::string& hex_signature, const BigInt& e, const BigInt& n, const PSSConfig& pss_config) {
+    return verify(message, hex_to_bytes(hex_signature), e, n, pss_config);
 }
 
 }

@@ -33,4 +33,6 @@ std::vector<uint8_t> digital_signature(const std::string& message, const BigInt&
 
 bool verify(const std::string& message, const std::vector<uint8_t>& signature, const BigInt& e, const BigInt& n, const PSSConfig& pss_config);
 
+bool verify(const std::string& message, const std::string& hex_signature, const BigInt& e, const BigInt& n, const PSSConfig& pss_config);
+
 }
