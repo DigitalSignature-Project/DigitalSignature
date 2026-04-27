@@ -14,4 +14,12 @@ std::vector<uint8_t> hex_to_bytes(const std::string& hex);
 
 std::vector<uint8_t> base64_to_bytes(const std::string& input);
 
+size_t DER_decode_length(const std::vector<uint8_t>& data, size_t& offset);
+
+std::vector<uint8_t> DER_decode_integer(const std::vector<uint8_t>& data, size_t& offset);
+
+std::vector<uint8_t> DER_encode_length(const size_t& len);
+
+std::vector<uint8_t> DER_encode_integer(const std::vector<uint8_t>& val);
+
 }

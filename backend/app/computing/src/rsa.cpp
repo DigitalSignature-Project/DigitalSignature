@@ -13,14 +13,14 @@ void RSA_generate_keys(BigInt& key_pub, BigInt& key_priv, BigInt& n, int bits) {
     e.limbs[0] = 65537;
 
     RandomGenerator rng;
-    BigInt p1 = generate_prime(bits, 10, rng);
-    BigInt p2 = generate_prime(bits, 10, rng);
+    BigInt p1 = generate_prime(bits, 40, rng);
+    BigInt p2 = generate_prime(bits, 40, rng);
 
     while (((p1 - 1) % e).isZero()) {
-        p1 = generate_prime(bits, 10, rng);
+        p1 = generate_prime(bits, 40, rng);
     }
     while (((p2 - 1) % e).isZero() || p1 == p2) {
-        p2 = generate_prime(bits, 10, rng);
+        p2 = generate_prime(bits, 40, rng);
     }
 
     n = p1 * p2;
@@ -44,14 +44,14 @@ void RSA_generate_keys_parallel(BigInt& key_pub, BigInt& key_priv, BigInt& n, in
     BigInt e(64);
     e.limbs[0] = 65537;
 
-    BigInt p1 = generate_prime_parallel_omp(bits, 10, threads);
-    BigInt p2 = generate_prime_parallel_omp(bits, 10, threads);
+    BigInt p1 = generate_prime_parallel_omp(bits, 40, threads);
+    BigInt p2 = generate_prime_parallel_omp(bits, 40, threads);
 
     while (((p1 - 1) % e).isZero()) {
-        p1 = generate_prime_parallel_omp(bits, 10, threads);
+        p1 = generate_prime_parallel_omp(bits, 40, threads);
     }
     while (((p2 - 1) % e).isZero() || p1 == p2) {
-        p2 = generate_prime_parallel_omp(bits, 10, threads);
+        p2 = generate_prime_parallel_omp(bits, 40, threads);
     }
 
     n = p1 * p2;

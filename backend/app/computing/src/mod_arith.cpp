@@ -90,8 +90,10 @@ BigInt montgomery_reduce(const BigInt& t, const BigInt& n, uint64_t n_inv) {
 
         size_t pos = i + k;
         while (carry != 0) {
-            if (pos >= res.limbs.size())
+            if (pos >= res.limbs.size()) {
                 res.limbs.push_back(0);
+                res.used++;
+            }
 
             uint64_t sum = res.limbs[pos] + carry;
             carry = (sum < carry) ? 1 : 0;
@@ -100,15 +102,14 @@ BigInt montgomery_reduce(const BigInt& t, const BigInt& n, uint64_t n_inv) {
         }
     }
 
-    BigInt result(k * 64);
-    for (size_t i = 0; i < k; i++) {
+    BigInt result((res.used - k) * 64);
+    for (size_t i = 0; i < result.used; i++) {
         result.limbs[i] = res.limbs[i + k];
     }
 
-    result.used = k;
     result.normalize();
 
-    if (!(result < n)) {
+    while (!(result < n)) {
         result = result - n;
     }
 
