@@ -60,7 +60,7 @@ std::vector<uint8_t> hex_to_bytes(const std::string& hex) {
     }
 
     if (clean.size() % 2 != 0) {
-        throw std::invalid_argument("Hex string must have even length");
+        clean = "0" + clean;
     }
 
     std::vector<uint8_t> result;

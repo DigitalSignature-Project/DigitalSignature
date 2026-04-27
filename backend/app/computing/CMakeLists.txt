@@ -24,6 +24,7 @@ pybind11_add_module(DigiSign
     src/sha256.cpp
     src/pybind.cpp
     src/sha3.cpp
+    src/elgamal.cpp
 )
 
 # include
