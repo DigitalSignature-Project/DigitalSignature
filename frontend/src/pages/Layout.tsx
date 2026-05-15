@@ -1,22 +1,23 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'; 
-import { Home, Lock, ShieldCheck, Settings, Bell, User, Shield, LogOut, ChevronDown } from 'lucide-react';
+import { Home, Lock, ShieldCheck, Settings, User, Shield, LogOut, ChevronDown, Power } from 'lucide-react';
 import { getCurrentWindow, LogicalSize } from '@tauri-apps/api/window';
 
 const Layout = () => {
   const navigate = useNavigate(); 
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [username, setUsername] = useState("Użytkownik");
 
   useEffect(() => {
+    const storedName = localStorage.getItem("username") || sessionStorage.getItem("username");
+    if (storedName) setUsername(storedName);
+
     const expandWindow = async () => {
       try {
         const appWindow = getCurrentWindow();
-        
         await appWindow.setResizable(true);
         await appWindow.setSize(new LogicalSize(1200, 800));
         await appWindow.center();
-        
-        console.log("Window expanded and unlocked successfully");
       } catch (error) {
         console.error("Failed to expand window:", error);
       }
@@ -35,17 +36,22 @@ const Layout = () => {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    sessionStorage.removeItem('isAuthenticated');
+    localStorage.clear();
+    sessionStorage.clear();
     setIsProfileMenuOpen(false);
     navigate('/login');
   };
 
-  const handleTestForget = () => {
-    localStorage.removeItem('isAuthenticated');
-    sessionStorage.removeItem('isAuthenticated');
-    setIsProfileMenuOpen(false);
-    navigate('/login');
+  const handleExitApp = async () => {
+    console.log("Kliknięto przycisk Exit!"); 
+    try {
+      if ('__TAURI_INTERNALS__' in window || '__TAURI__' in window) {
+        const appWindow = getCurrentWindow();
+        await appWindow.close();
+      }
+    } catch (error) {
+      console.error("Failed to exit app:", error);
+    }
   };
 
   return (
@@ -75,15 +81,20 @@ const Layout = () => {
           ))}
         </nav>
 
+        <div className="p-4 mt-auto border-t border-slate-800">
+          <button 
+            onClick={handleExitApp}
+            className="flex items-center w-full px-4 py-3 text-slate-400 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-colors"
+          >
+            <Power className="w-5 h-5 mr-3" />
+            <span className="font-medium">Exit</span>
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-end px-8 z-20">
           <div className="flex items-center space-x-4">
-            <button className="text-slate-400 hover:text-slate-600">
-              <Bell className="w-5 h-5" />
-            </button>
-            
             <div className="relative">
               <div 
                 className="flex items-center space-x-2 border-l pl-4 border-slate-200 cursor-pointer hover:opacity-80"
@@ -92,25 +103,12 @@ const Layout = () => {
                 <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center">
                   <User className="w-5 h-5 text-slate-500" />
                 </div>
-                <span className="text-sm font-medium text-slate-700">John Kowalski</span>
+                <span className="text-sm font-medium text-slate-700">{username}</span>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
               </div>
 
               {isProfileMenuOpen && (
                 <div className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-2 animate-in fade-in slide-in-from-top-2">
-                  <button 
-                    onClick={handleTestForget}
-                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-cyan-600 transition-colors font-semibold"
-                  >
-                    Zapomnij dane logowania (dla testów!)
-                  </button>
-                  <button 
-                    onClick={() => setIsProfileMenuOpen(false)}
-                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-cyan-600 transition-colors"
-                  >
-                    Option 2
-                  </button>
-                  <div className="h-px bg-slate-100 my-1"></div>
                   <button 
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center"
@@ -121,7 +119,6 @@ const Layout = () => {
                 </div>
               )}
             </div>
-
           </div>
         </header>
 
@@ -132,7 +129,6 @@ const Layout = () => {
               onClick={() => setIsProfileMenuOpen(false)}
             />
           )}
-          
           <div className="relative z-20">
             <Outlet />
           </div>
