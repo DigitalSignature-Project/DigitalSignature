@@ -61,9 +61,13 @@ const AuthPage: React.FC = () => {
   const finalizeAuth = () => {
     if (rememberMe) {
       localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("username", formData.login);
     } else {
       sessionStorage.setItem("isAuthenticated", "true");
+      sessionStorage.setItem("username", formData.login);
+
       localStorage.removeItem("isAuthenticated");
+      localStorage.removeItem("username");
     }
     navigate("/");
   };
@@ -94,11 +98,15 @@ const AuthPage: React.FC = () => {
         key: formData.keyPassphrase,
       };
 
-      const response = await checkUserKey(credentials);
+      try {
+        const response = await checkUserKey(credentials);
 
-      if (response) {
-        finalizeAuth();
-      } else {
+        if (response) {
+          finalizeAuth();
+        } else {
+          setErrorMessage("Invalid key passphrase.");
+        }
+      } catch (error) {
         setErrorMessage("Invalid key passphrase.");
       }
       return;
@@ -386,7 +394,7 @@ const AuthPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => changeView("FORGOT_PASSWORD")}
-                  className="text-sm font-bold text-slate-400 hover:text-red-500 transition-colors"
+                  className="text-sm font-bold text-red-500 hover:text-red-700 transition-colors"
                 >
                   Reset private key
                 </button>

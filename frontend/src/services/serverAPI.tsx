@@ -35,6 +35,12 @@ type CheckUserKey = {
   key: string;
 };
 
+export type VerifyFileResponse = {
+  isValid: boolean;
+  signer: string;
+  date: string;
+};
+
 export const verifyUserLogin = async (credentials: VerifyUserLogin) => {
   const { data } = await axios.post<VerifyUserLoginResponse>(
     "http://127.0.0.1:2138/server/verify_user_login",
@@ -93,4 +99,41 @@ export const checkUserKey = async (credentials: CheckUserKey) => {
   );
 
   return Number(data.status) === 200 ? true : false;
+};
+
+export const signFile = async (filePath: string, algorithm: string, hashType: string) => {
+  const { data } = await axios.post<Blob>(
+    "http://127.0.0.1:2138/server/sign_file",
+    { 
+      filePath, 
+      algorithm, 
+      hashType 
+    }, 
+    {
+      headers: {
+        Authorization: "Bearer 2137",
+        "Content-Type": "application/json",
+      },
+      responseType: "blob",
+    }
+  );
+
+  return data;
+};
+
+export const verifyFile = async (filePath: string) => {
+  const { data } = await axios.post<VerifyFileResponse>(
+    "http://127.0.0.1:2138/server/verify_file",
+    { 
+      filePath 
+    }, 
+    {
+      headers: {
+        Authorization: "Bearer 2137",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return data;
 };
