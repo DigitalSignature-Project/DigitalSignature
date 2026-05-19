@@ -6,6 +6,7 @@
 #include <digisign/sha256.h>
 #include <digisign/sha3.h>
 #include <digisign/elgamal.h>
+#include <digisign/ecdsa.h>
 
 
 void bind_bigint(pybind11::module_ &m) {
@@ -133,23 +134,110 @@ void bind_elgamal(pybind11::module_ &elgamal) {
 
             return digisign::elgamal_verify(message, key_pub, hex_signature, hash);
         },
-          "verifies ElGamal digital signature in DER structure and hex format");
-    elgamal.def("DER_decode_signature", pybind11::overload_cast<const std::vector<uint8_t>&>(&digisign::DER_decode_signature), "decodes ElGamal in DER format from bytes to signature");
-    elgamal.def("DER_decode_signature", pybind11::overload_cast<const std::string&>(&digisign::DER_decode_signature), "decodes ElGamal in DER format from hex string to signature");
-    elgamal.def("DER_encode_signature", &digisign::DER_encode_signature, "encodes ElGamal digital signature to DER format in bytes");
-    elgamal.def("DER_encode_signature_hex", &digisign::DER_encode_signature_hex, "encodes ElGamal digital signature to DER format in hex string");
+          "verifies ElGamal digital signature in DER structure and hex format"); 
+    elgamal.def("DER_decode_signature", pybind11::overload_cast<const std::vector<uint8_t>&>(&digisign::DER_decode_signature), "decodes ElGamal signature in DER format from bytes to signature");
+    elgamal.def("DER_decode_signature", pybind11::overload_cast<const std::string&>(&digisign::DER_decode_signature), "decodes ElGamal signature in DER format from hex string to signature");
+    elgamal.def("DER_encode_signature", pybind11::overload_cast<const digisign::ElGamalSignature&>(&digisign::DER_encode_signature), "encodes ElGamal digital signature to DER format in bytes");
+    elgamal.def("DER_encode_signature_hex", pybind11::overload_cast<const digisign::ElGamalSignature&>(&digisign::DER_encode_signature_hex), "encodes ElGamal digital signature to DER format in hex string");
 }
 
+void bind_ecdsa(pybind11::module_ &ecdsa) {
+    pybind11::class_<digisign::ECDSAPublicKey>(ecdsa, "PublicKey")
+    .def(pybind11::init<>())
+    .def(pybind11::init([](digisign::BigInt x, digisign::BigInt y) {
+        return digisign::ECDSAPublicKey(digisign::CurvePoint(x, y));}),
+        pybind11::arg("x"),
+        pybind11::arg("y"))
+    .def_readwrite("key_public", &digisign::ECDSAPublicKey::key_public);
+
+    pybind11::class_<digisign::ECDSASignature>(ecdsa, "Signature")
+    .def(pybind11::init<>())
+    .def(pybind11::init([](digisign::BigInt r, digisign::BigInt s) {
+        return digisign::ECDSASignature(r, s);}), 
+        pybind11::arg("r"), 
+        pybind11::arg("s"))
+    .def_readwrite("r", &digisign::ECDSASignature::r)
+    .def_readwrite("s", &digisign::ECDSASignature::s);
+
+    ecdsa.def("ecdsa_generate_keys", &digisign::ECDSA_generate_keys, "generates ECDSA keys");
+    ecdsa.def("sign",
+    [](const std::string& message,
+        const digisign::BigInt& key_priv,
+        pybind11::function hash_function)
+    {
+        std::function<std::vector<uint8_t>(const std::vector<uint8_t>&)> hash =
+            [hash_function](const std::vector<uint8_t>& v) {
+                pybind11::object result = hash_function(v);
+                return result.cast<std::vector<uint8_t>>();
+            };
+
+        return digisign::ecdsa_sign(message, key_priv, hash);
+    },
+    "creates ECDSA digital signature");
+    ecdsa.def("verify",
+    [](const std::string& message,
+        const digisign::ECDSAPublicKey& key_pub,
+        const digisign::ECDSASignature& signature,
+        pybind11::function hash_function)
+    {
+        std::function<std::vector<uint8_t>(const std::vector<uint8_t>&)> hash =
+            [hash_function](const std::vector<uint8_t>& v) {
+                pybind11::object result = hash_function(v);
+                return result.cast<std::vector<uint8_t>>();
+            };
+
+        return digisign::ecdsa_verify(message, key_pub, signature, hash);
+    },
+    "verifies ECDSA digital signature");
+    ecdsa.def("verify",
+    [](const std::string& message,
+        const digisign::ECDSAPublicKey& key_pub,
+        const std::string& hex_signature,
+        pybind11::function hash_function)
+    {
+        std::function<std::vector<uint8_t>(const std::vector<uint8_t>&)> hash =
+            [hash_function](const std::vector<uint8_t>& v) {
+                pybind11::object result = hash_function(v);
+                return result.cast<std::vector<uint8_t>>();
+            };
+
+        return digisign::ecdsa_verify(message, key_pub, hex_signature, hash);
+    },
+    "verifies ECDSA digital signature in DER structure and hex format");
+    ecdsa.def("DER_decode_signature", pybind11::overload_cast<const std::vector<uint8_t>&>(&digisign::DER_decode_signature_ecdsa), "decodes ECDSA in DER format from bytes to signature");
+    ecdsa.def("DER_decode_signature", pybind11::overload_cast<const std::string&>(&digisign::DER_decode_signature_ecdsa), "decodes ECDSA signature in DER format from hex string to signature");
+    ecdsa.def("DER_encode_signature", pybind11::overload_cast<const digisign::ECDSASignature&>(&digisign::DER_encode_signature), "encodes ECDSA digital signature to DER format in bytes");
+    ecdsa.def("DER_encode_signature_hex", pybind11::overload_cast<const digisign::ECDSASignature&>(&digisign::DER_encode_signature_hex), "encodes ECDSA digital signature to DER format in hex string");
+    ecdsa.def("encode_public_key", &digisign::encode_public_key,
+            pybind11::arg("public_key"),
+            pybind11::arg("compressed") = false,
+    "encodes public key to SEC1 bytes format");
+
+    ecdsa.def("encode_public_key_hex", &digisign::encode_public_key_hex,
+            pybind11::arg("public_key"),
+            pybind11::arg("compressed") = false,
+    "encodes public key to SEC1 hex format");
+    ecdsa.def("decode_public_key", pybind11::overload_cast<const std::vector<uint8_t>&, bool>(&digisign::decode_public_key),
+            pybind11::arg("pub_bytes"),
+            pybind11::arg("compressed"),
+    "decodes SEC1 public key from bytes");
+    ecdsa.def("decode_public_key", pybind11::overload_cast<const std::string&, bool>(&digisign::decode_public_key),
+            pybind11::arg("pub_hex"),
+            pybind11::arg("compressed"),
+    "decodes SEC1 public key from hex");
+}
 
 PYBIND11_MODULE(DigiSign, m) {
     auto rsa = m.def_submodule("RSA");
     auto hash = m.def_submodule("HASH");
     auto format = m.def_submodule("Format"); 
     auto elgamal = m.def_submodule("ElGamal");
+    auto ecdsa = m.def_submodule("ECDSA");
 
     bind_bigint(m);
     bind_rsa(rsa);
     bind_hash(hash);
     bind_format(format);
     bind_elgamal(elgamal);
+    bind_ecdsa(ecdsa);
 }
