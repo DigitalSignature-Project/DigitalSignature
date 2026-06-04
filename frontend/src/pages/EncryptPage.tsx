@@ -3,10 +3,8 @@ import { EncryptAndSignBtn } from "../components/EncryptAndSignBtn";
 import { TempResultSection } from "../components/TempResultSection";
 import { useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
+import { invoke } from "@tauri-apps/api/core";
 import { signInRsaFile } from "../services/rsaAPI";
-// import { invoke } from "@tauri-apps/api/core"; // Upewnij się, że używasz Tauri v2 (core). Dla v1 to @tauri-apps/api/tauri
-
-// import { signInRsaFile } from "../services/rsaAPI";
 
 const EncryptPage = () => {
   const location = useLocation();
@@ -22,21 +20,23 @@ const EncryptPage = () => {
   // Zmienne autoryzacyjne wyciągnięte na poziom komponentu
   const login =
     localStorage.getItem("login") || sessionStorage.getItem("login");
-  const sessionPassphrase = (location.state as any)?.keyPassphrase;
+  const getDecryptionKey = async (): Promise<string | null> => {
+    const fromState = (location.state as { keyPassphrase?: string } | null)
+      ?.keyPassphrase;
+    if (fromState) return fromState;
 
-  // const getDecryptionKey = async () => {
-  //   if (sessionPassphrase) {
-  //     return sessionPassphrase;
-  //   } else {
-  //     try {
-  //       const storedPassphrase = await invoke("get_credentials", { login });
-  //       return storedPassphrase as string;
-  //     } catch (error) {
-  //       console.error("Brak zapisanego hasła lub błąd dostępu", error);
-  //       return null;
-  //     }
-  //   }
-  // };
+    const fromSession = sessionStorage.getItem("keyPassphrase");
+    if (fromSession) return fromSession;
+
+    if (!login) return null;
+
+    try {
+      return (await invoke("get_credentials", { login })) as string;
+    } catch (error) {
+      console.error("Brak zapisanego hasła lub błąd dostępu", error);
+      return null;
+    }
+  };
 
   const handleEncryptAndSign = async () => {
     if (!selectedFile) return;
@@ -51,19 +51,28 @@ const EncryptPage = () => {
 
     console.log(file_content);
 
+    if (!login) {
+      setCalculated("Error: User is not logged in.");
+      return;
+    }
+
+    const password = await getDecryptionKey();
+    if (!password) {
+      setCalculated("Error: Brak hasła do klucza. Zaloguj się ponownie.");
+      return;
+    }
+
+    const encryptedPrivateKey = sessionStorage.getItem("encryptedPrivateKey");
+    const keyModule = sessionStorage.getItem("keyModule");
+
+    if (!encryptedPrivateKey || !keyModule) {
+      setCalculated("Error: Brak kluczy sesji. Zaloguj się ponownie.");
+      return;
+    }
+
     setLoading(true);
     setCalculated("Signing file locally...");
     setProgress(0);
-
-    if (!login) {
-      throw new Error("User is not logged in");
-    }
-
-    const signed_file = await signInRsaFile(
-      file_content,
-      login,
-      sessionPassphrase,
-    );
 
     const progressInterval = setInterval(() => {
       setProgress((p) => {
@@ -75,15 +84,17 @@ const EncryptPage = () => {
     }, 150);
 
     try {
-      // const link = document.createElement("a");
-      // link.download = `signed_${selectedFile.name}`;
-      // document.body.appendChild(link);
-      // link.click();
-      // link.remove();
+      const signed_file = await signInRsaFile(
+        file_content,
+        login,
+        password,
+        encryptedPrivateKey,
+        keyModule,
+      );
 
       clearInterval(progressInterval);
       setProgress(100);
-      setCalculated(`Success! File signed. ${signed_file}`);
+      setCalculated(`Success! File signed. ${signed_file.signature}`);
     } catch (error) {
       console.error("API Error:", error);
       clearInterval(progressInterval);

@@ -44,6 +44,8 @@ export const signInRsaFile = async (
   file_content: string,
   login: string,
   password: string,
+  encrypted_private_key?: string,
+  key_module?: string,
 ) => {
   const { data } = await axios.post<SignInFileRsaResponse>(
     "http://127.0.0.1:2138/signature/generate_rsa_signature",
@@ -51,6 +53,8 @@ export const signInRsaFile = async (
       file_content,
       login,
       password,
+      encrypted_private_key,
+      key_module,
     },
     {
       headers: {

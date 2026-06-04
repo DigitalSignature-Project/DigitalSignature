@@ -74,17 +74,17 @@ const AuthPage: React.FC = () => {
 
         sessionStorage.removeItem("isAuthenticated");
         sessionStorage.removeItem("login");
-
-        navigate("/");
+        sessionStorage.removeItem("keyPassphrase");
       } else {
         sessionStorage.setItem("isAuthenticated", "true");
         sessionStorage.setItem("login", login);
+        sessionStorage.setItem("keyPassphrase", keyPassphrase);
 
         localStorage.removeItem("isAuthenticated");
         localStorage.removeItem("login");
-
-        navigate("/", { state: { keyPassphrase: keyPassphrase } });
       }
+
+      navigate("/", { state: { keyPassphrase } });
     } catch (error) {
       console.error("Błąd podczas zapisywania poświadczeń:", error);
       setErrorMessage("Wystąpił błąd podczas zabezpieczania klucza lokalnie.");
@@ -102,7 +102,12 @@ const AuthPage: React.FC = () => {
 
       const response = await verifyUserLogin(credentials);
 
-      if (response.success) {
+      if (response.success && response.data) {
+        sessionStorage.setItem(
+          "encryptedPrivateKey",
+          response.data.encrypted_private_key,
+        );
+        sessionStorage.setItem("keyModule", response.data.key_module);
         changeView("LOGIN_PASSPHRASE");
       } else {
         setErrorMessage("Login failed: Invalid credentials.");
@@ -172,6 +177,19 @@ const AuthPage: React.FC = () => {
       const response = await registerNewUser(credentials);
 
       if (response) {
+        const loginResponse = await verifyUserLogin({
+          login: formData.login,
+          password_hash: formData.password,
+        });
+
+        if (loginResponse.success && loginResponse.data) {
+          sessionStorage.setItem(
+            "encryptedPrivateKey",
+            loginResponse.data.encrypted_private_key,
+          );
+          sessionStorage.setItem("keyModule", loginResponse.data.key_module);
+        }
+
         await finalizeAuth();
       } else {
         setErrorMessage("Server error during account creation.");
