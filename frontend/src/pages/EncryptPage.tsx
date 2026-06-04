@@ -2,34 +2,80 @@ import { Plus, FileText } from "lucide-react";
 import { EncryptAndSignBtn } from "../components/EncryptAndSignBtn";
 import { TempResultSection } from "../components/TempResultSection";
 import { useState, useRef } from "react";
-import { signFile } from "../services/serverAPI"; // Upewnij się, że ścieżka jest poprawna
+import { useLocation } from "react-router-dom";
+import { invoke } from "@tauri-apps/api/core";
+import { signInRsaFile } from "../services/rsaAPI";
 
 const EncryptPage = () => {
+  const location = useLocation();
   const [loading, setLoading] = useState<boolean>(false);
   const [calculated, setCalculated] = useState<string>("Ready to sign");
-  
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [algorithm, setAlgorithm] = useState<string>("algo1");
   const [hashType, setHashType] = useState<string>("hash1");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-const handleEncryptAndSign = async () => {
+  // Zmienne autoryzacyjne wyciągnięte na poziom komponentu
+  const login =
+    localStorage.getItem("login") || sessionStorage.getItem("login");
+  const getDecryptionKey = async (): Promise<string | null> => {
+    const fromState = (location.state as { keyPassphrase?: string } | null)
+      ?.keyPassphrase;
+    if (fromState) return fromState;
+
+    const fromSession = sessionStorage.getItem("keyPassphrase");
+    if (fromSession) return fromSession;
+
+    if (!login) return null;
+
+    try {
+      return (await invoke("get_credentials", { login })) as string;
+    } catch (error) {
+      console.error("Brak zapisanego hasła lub błąd dostępu", error);
+      return null;
+    }
+  };
+
+  const handleEncryptAndSign = async () => {
     if (!selectedFile) return;
 
-    const filePath = (selectedFile as any).path;
+    // odczytanie hex zawartosci pliku tekstowego
+    const buffer = await selectedFile.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
 
-    if (!filePath) {
-      setCalculated("Błąd: Nie można odczytać ścieżki pliku na tym urządzeniu.");
+    const file_content = Array.from(bytes)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    console.log(file_content);
+
+    if (!login) {
+      setCalculated("Error: User is not logged in.");
       return;
     }
-    
+
+    const password = await getDecryptionKey();
+    if (!password) {
+      setCalculated("Error: Brak hasła do klucza. Zaloguj się ponownie.");
+      return;
+    }
+
+    const encryptedPrivateKey = sessionStorage.getItem("encryptedPrivateKey");
+    const keyModule = sessionStorage.getItem("keyModule");
+
+    if (!encryptedPrivateKey || !keyModule) {
+      setCalculated("Error: Brak kluczy sesji. Zaloguj się ponownie.");
+      return;
+    }
+
     setLoading(true);
     setCalculated("Signing file locally...");
     setProgress(0);
-    
+
     const progressInterval = setInterval(() => {
-      setProgress(p => {
+      setProgress((p) => {
         if (p < 50) return p + 6;
         if (p < 80) return p + 3;
         if (p < 90) return p + 1;
@@ -38,22 +84,19 @@ const handleEncryptAndSign = async () => {
     }, 150);
 
     try {
-      const blob = await signFile(filePath, algorithm, hashType);
-      
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = `signed_${selectedFile.name}`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(downloadUrl);
+      const signed_file = await signInRsaFile(
+        file_content,
+        login,
+        password,
+        encryptedPrivateKey,
+        keyModule,
+      );
 
       clearInterval(progressInterval);
       setProgress(100);
-      setCalculated("Success! File signed and downloaded.");
+      setCalculated(`Success! File signed. ${signed_file.signature}`);
     } catch (error) {
-      console.error("Błąd API:", error);
+      console.error("API Error:", error);
       clearInterval(progressInterval);
       setProgress(0);
       setCalculated("Error during signing process.");
@@ -83,7 +126,8 @@ const handleEncryptAndSign = async () => {
     e.preventDefault();
   };
 
-  const formatBytes = (bytes: number) => (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  const formatBytes = (bytes: number) =>
+    (bytes / (1024 * 1024)).toFixed(2) + " MB";
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -91,16 +135,15 @@ const handleEncryptAndSign = async () => {
         Encrypt and Sign Your Files
       </p>
       <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center min-h-[400px]">
-        
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          onChange={handleFileChange} 
-          className="hidden" 
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
         />
-        
+
         {!selectedFile ? (
-          <div 
+          <div
             onClick={() => fileInputRef.current?.click()}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -115,7 +158,10 @@ const handleEncryptAndSign = async () => {
           </div>
         ) : (
           <div className="flex flex-col items-center w-full max-w-md animate-in fade-in slide-in-from-bottom-4">
-            <div className="flex items-center space-x-4 cursor-pointer hover:opacity-80 transition-opacity w-full" onClick={() => fileInputRef.current?.click()}>
+            <div
+              className="flex items-center space-x-4 cursor-pointer hover:opacity-80 transition-opacity w-full"
+              onClick={() => fileInputRef.current?.click()}
+            >
               <FileText className="w-12 h-12 text-[#0f172a]" />
               <div className="flex-1 overflow-hidden">
                 <div className="flex justify-between items-baseline text-sm mb-1">
@@ -126,13 +172,15 @@ const handleEncryptAndSign = async () => {
                     {formatBytes(selectedFile.size)}
                   </span>
                 </div>
-                <span className="text-xs text-cyan-600 font-semibold block">Click to change file</span>
+                <span className="text-xs text-cyan-600 font-semibold block">
+                  Click to change file
+                </span>
               </div>
             </div>
 
             <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden mt-6">
-              <div 
-                className="bg-[#0f172a] h-2 rounded-full transition-[width] duration-150 ease-linear" 
+              <div
+                className="bg-[#0f172a] h-2 rounded-full transition-[width] duration-150 ease-linear"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -143,8 +191,10 @@ const handleEncryptAndSign = async () => {
           <div className="mt-12 w-full max-w-2xl flex items-end justify-between border-t border-slate-100 pt-8 gap-4 animate-in fade-in slide-in-from-bottom-2">
             <div className="space-y-4 flex-1">
               <div className="flex flex-col space-y-1">
-                <label className="text-xs font-semibold text-slate-500 uppercase">Algorithm</label>
-                <select 
+                <label className="text-xs font-semibold text-slate-500 uppercase">
+                  Algorithm
+                </label>
+                <select
                   value={algorithm}
                   onChange={(e) => setAlgorithm(e.target.value)}
                   className="p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
@@ -154,10 +204,12 @@ const handleEncryptAndSign = async () => {
                   <option value="algo3">Work in progress (Option 3)</option>
                 </select>
               </div>
-              
+
               <div className="flex flex-col space-y-1">
-                <label className="text-xs font-semibold text-slate-500 uppercase">Hash Type</label>
-                <select 
+                <label className="text-xs font-semibold text-slate-500 uppercase">
+                  Hash Type
+                </label>
+                <select
                   value={hashType}
                   onChange={(e) => setHashType(e.target.value)}
                   className="p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"

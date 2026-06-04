@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Lock, Shield, Key } from "lucide-react";
 import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
+import { invoke } from "@tauri-apps/api/core";
 import {
   checkUserKey,
   registerNewUser,
@@ -58,18 +59,36 @@ const AuthPage: React.FC = () => {
     setViewMode(mode);
   };
 
-  const finalizeAuth = () => {
-    if (rememberMe) {
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("username", formData.login);
-    } else {
-      sessionStorage.setItem("isAuthenticated", "true");
-      sessionStorage.setItem("username", formData.login);
+  const finalizeAuth = async () => {
+    const { login, keyPassphrase } = formData;
 
-      localStorage.removeItem("isAuthenticated");
-      localStorage.removeItem("username");
+    try {
+      if (rememberMe) {
+        await invoke("save_credentials", {
+          login: login,
+          passphrase: keyPassphrase,
+        });
+
+        localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("login", login);
+
+        sessionStorage.removeItem("isAuthenticated");
+        sessionStorage.removeItem("login");
+        sessionStorage.removeItem("keyPassphrase");
+      } else {
+        sessionStorage.setItem("isAuthenticated", "true");
+        sessionStorage.setItem("login", login);
+        sessionStorage.setItem("keyPassphrase", keyPassphrase);
+
+        localStorage.removeItem("isAuthenticated");
+        localStorage.removeItem("login");
+      }
+
+      navigate("/", { state: { keyPassphrase } });
+    } catch (error) {
+      console.error("Błąd podczas zapisywania poświadczeń:", error);
+      setErrorMessage("Wystąpił błąd podczas zabezpieczania klucza lokalnie.");
     }
-    navigate("/");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -83,7 +102,12 @@ const AuthPage: React.FC = () => {
 
       const response = await verifyUserLogin(credentials);
 
-      if (response.success) {
+      if (response.success && response.data) {
+        sessionStorage.setItem(
+          "encryptedPrivateKey",
+          response.data.encrypted_private_key,
+        );
+        sessionStorage.setItem("keyModule", response.data.key_module);
         changeView("LOGIN_PASSPHRASE");
       } else {
         setErrorMessage("Login failed: Invalid credentials.");
@@ -98,15 +122,11 @@ const AuthPage: React.FC = () => {
         key: formData.keyPassphrase,
       };
 
-      try {
-        const response = await checkUserKey(credentials);
+      const response = await checkUserKey(credentials);
 
-        if (response) {
-          finalizeAuth();
-        } else {
-          setErrorMessage("Invalid key passphrase.");
-        }
-      } catch (error) {
+      if (response) {
+        await finalizeAuth(); // Dodano await
+      } else {
         setErrorMessage("Invalid key passphrase.");
       }
       return;
@@ -124,7 +144,7 @@ const AuthPage: React.FC = () => {
 
       const credentials = {
         login: formData.login,
-        password_hash: formData.login,
+        password_hash: formData.password,
       };
 
       const response = await verifyUserLogin(credentials);
@@ -157,7 +177,20 @@ const AuthPage: React.FC = () => {
       const response = await registerNewUser(credentials);
 
       if (response) {
-        finalizeAuth();
+        const loginResponse = await verifyUserLogin({
+          login: formData.login,
+          password_hash: formData.password,
+        });
+
+        if (loginResponse.success && loginResponse.data) {
+          sessionStorage.setItem(
+            "encryptedPrivateKey",
+            loginResponse.data.encrypted_private_key,
+          );
+          sessionStorage.setItem("keyModule", loginResponse.data.key_module);
+        }
+
+        await finalizeAuth();
       } else {
         setErrorMessage("Server error during account creation.");
       }
@@ -394,7 +427,7 @@ const AuthPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => changeView("FORGOT_PASSWORD")}
-                  className="text-sm font-bold text-red-500 hover:text-red-700 transition-colors"
+                  className="text-sm font-bold text-slate-400 hover:text-red-500 transition-colors"
                 >
                   Reset private key
                 </button>
