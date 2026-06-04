@@ -7,6 +7,7 @@ class RsaSignatureResponse(BaseModel):
 class RsaSignature(BaseModel):
     file_content: str
     login: str
+    password: str
 
 
 class VerifyRsaSignatureResponse(BaseModel):

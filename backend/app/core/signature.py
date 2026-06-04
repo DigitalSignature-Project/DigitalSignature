@@ -1,10 +1,10 @@
 import httpx
 
 from app.computing.build.Release import DigiSign
-from app.routers.external_server_endp import retrieve_public_key
+from app.core.encryption import decrypt
 
 
-async def create_rsa_signature(file_content, login) -> str:
+async def create_rsa_signature(file_content: str, login: str, password: str) -> str:
     pss_config = DigiSign.RSA.PSSConfig(32, DigiSign.HASH.SHA256, DigiSign.HASH.SHA256)
 
     async with httpx.AsyncClient() as client:
@@ -16,12 +16,13 @@ async def create_rsa_signature(file_content, login) -> str:
     response_data = response.json()
 
     private_key = DigiSign.BigInt.from_hex(response_data.get("private_key", ""))
+    private_key = decrypt(private_key, password)
     key_module = DigiSign.BigInt.from_hex(response_data.get("key_module", ""))
     signature = DigiSign.RSA.sign(file_content, private_key, key_module, pss_config)
     return signature.to_hex()
 
 
-async def verify_rsa_signature(file_content, signature, login) -> bool:
+async def verify_rsa_signature(file_content: str, signature: str, login: str) -> bool:
     pss_config = DigiSign.RSA.PSSConfig(32, DigiSign.HASH.SHA256, DigiSign.HASH.SHA256)
 
     async with httpx.AsyncClient() as client:
