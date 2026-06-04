@@ -19,7 +19,7 @@ async def generate_rsa_signature(data: RsaSignature) -> RsaSignatureResponse:
 
 
 @router.get("/verify_rsa_signature", response_model=VerifyRsaSignatureResponse)
-async def verify_rsa_signature(data: VerifyRsaSignature) -> VerifyRsaSignatureResponse:
+async def verify_rsa_sign(data: VerifyRsaSignature) -> VerifyRsaSignatureResponse:
     file_content = data.file_content
     signature = data.signature
     login = data.login

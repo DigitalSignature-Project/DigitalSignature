@@ -2,7 +2,7 @@ import { Plus, FileText } from "lucide-react";
 import { EncryptAndSignBtn } from "../components/EncryptAndSignBtn";
 import { TempResultSection } from "../components/TempResultSection";
 import { useState, useRef } from "react";
-import { signFile } from "../services/serverAPI"; // Upewnij się, że ścieżka jest poprawna
+import { signInRsaFile } from "../services/rsaAPI";
 
 const EncryptPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -21,15 +21,17 @@ const EncryptPage = () => {
     const buffer = await selectedFile.arrayBuffer();
     const bytes = new Uint8Array(buffer);
 
-    const hex = Array.from(bytes)
+    const file_content = Array.from(bytes)
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    console.log(hex);
+    console.log(file_content);
 
     setLoading(true);
     setCalculated("Signing file locally...");
     setProgress(0);
+
+    // signInRsaFile(file_content, )
 
     const progressInterval = setInterval(() => {
       setProgress((p) => {
@@ -41,22 +43,17 @@ const EncryptPage = () => {
     }, 150);
 
     try {
-      const blob = await signFile(filePath, algorithm, hashType);
-
-      const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.href = downloadUrl;
       link.download = `signed_${selectedFile.name}`;
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.URL.revokeObjectURL(downloadUrl);
 
       clearInterval(progressInterval);
       setProgress(100);
-      setCalculated("Success! File signed and downloaded.");
+      setCalculated("Success! File signed.");
     } catch (error) {
-      console.error("Błąd API:", error);
+      console.error("API Error:", error);
       clearInterval(progressInterval);
       setProgress(0);
       setCalculated("Error during signing process.");
