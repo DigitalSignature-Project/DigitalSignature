@@ -47,13 +47,18 @@ export const signInRsaFile = async (
 ) => {
   const { data } = await axios.post<SignInFileRsaResponse>(
     "http://127.0.0.1:2138/signature/generate_rsa_signature",
-    { file_content, login, password },
+    {
+      file_content,
+      login,
+      password,
+    },
     {
       headers: {
         Authorization: "Bearer 2137",
       },
     },
   );
+
   return data;
 };
 
@@ -62,14 +67,19 @@ export const verifyRsaSignature = async (
   signature: string,
   login: string,
 ) => {
-  const { data } = await axios.post<VerifyRsaSignatureResponse>(
+  const { data } = await axios.get<VerifyRsaSignatureResponse>(
     "http://127.0.0.1:2138/signature/verify_rsa_signature",
-    { file_content, signature, login },
     {
+      params: {
+        file_content,
+        signature,
+        login,
+      },
       headers: {
         Authorization: "Bearer 2137",
       },
     },
   );
+
   return data;
 };

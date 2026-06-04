@@ -2,9 +2,14 @@ import { Plus, FileText } from "lucide-react";
 import { EncryptAndSignBtn } from "../components/EncryptAndSignBtn";
 import { TempResultSection } from "../components/TempResultSection";
 import { useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { signInRsaFile } from "../services/rsaAPI";
+// import { invoke } from "@tauri-apps/api/core"; // Upewnij się, że używasz Tauri v2 (core). Dla v1 to @tauri-apps/api/tauri
+
+// import { signInRsaFile } from "../services/rsaAPI";
 
 const EncryptPage = () => {
+  const location = useLocation();
   const [loading, setLoading] = useState<boolean>(false);
   const [calculated, setCalculated] = useState<string>("Ready to sign");
 
@@ -13,6 +18,25 @@ const EncryptPage = () => {
   const [algorithm, setAlgorithm] = useState<string>("algo1");
   const [hashType, setHashType] = useState<string>("hash1");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Zmienne autoryzacyjne wyciągnięte na poziom komponentu
+  const login =
+    localStorage.getItem("login") || sessionStorage.getItem("login");
+  const sessionPassphrase = (location.state as any)?.keyPassphrase;
+
+  // const getDecryptionKey = async () => {
+  //   if (sessionPassphrase) {
+  //     return sessionPassphrase;
+  //   } else {
+  //     try {
+  //       const storedPassphrase = await invoke("get_credentials", { login });
+  //       return storedPassphrase as string;
+  //     } catch (error) {
+  //       console.error("Brak zapisanego hasła lub błąd dostępu", error);
+  //       return null;
+  //     }
+  //   }
+  // };
 
   const handleEncryptAndSign = async () => {
     if (!selectedFile) return;
@@ -31,7 +55,15 @@ const EncryptPage = () => {
     setCalculated("Signing file locally...");
     setProgress(0);
 
-    // signInRsaFile(file_content, )
+    if (!login) {
+      throw new Error("User is not logged in");
+    }
+
+    const signed_file = await signInRsaFile(
+      file_content,
+      login,
+      sessionPassphrase,
+    );
 
     const progressInterval = setInterval(() => {
       setProgress((p) => {
@@ -43,15 +75,15 @@ const EncryptPage = () => {
     }, 150);
 
     try {
-      const link = document.createElement("a");
-      link.download = `signed_${selectedFile.name}`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      // const link = document.createElement("a");
+      // link.download = `signed_${selectedFile.name}`;
+      // document.body.appendChild(link);
+      // link.click();
+      // link.remove();
 
       clearInterval(progressInterval);
       setProgress(100);
-      setCalculated("Success! File signed.");
+      setCalculated(`Success! File signed. ${signed_file}`);
     } catch (error) {
       console.error("API Error:", error);
       clearInterval(progressInterval);
