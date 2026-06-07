@@ -1,10 +1,13 @@
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, Download } from "lucide-react"; 
 import { EncryptAndSignBtn } from "../components/EncryptAndSignBtn";
 import { TempResultSection } from "../components/TempResultSection";
 import { useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { signInRsaFile } from "../services/rsaAPI";
+import JSZip from "jszip"; 
+import { save } from "@tauri-apps/plugin-dialog";
+import { writeFile } from "@tauri-apps/plugin-fs";
 
 const EncryptPage = () => {
   const location = useLocation();
@@ -17,12 +20,13 @@ const EncryptPage = () => {
   const [hashType, setHashType] = useState<string>("hash1");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Zmienne autoryzacyjne wyciągnięte na poziom komponentu
-  const login =
-    localStorage.getItem("login") || sessionStorage.getItem("login");
+  const [isSigned, setIsSigned] = useState<boolean>(false);
+  const [signatureData, setSignatureData] = useState<any>(null);
+
+  const login = localStorage.getItem("login") || sessionStorage.getItem("login");
+
   const getDecryptionKey = async (): Promise<string | null> => {
-    const fromState = (location.state as { keyPassphrase?: string } | null)
-      ?.keyPassphrase;
+    const fromState = (location.state as { keyPassphrase?: string } | null)?.keyPassphrase;
     if (fromState) return fromState;
 
     const fromSession = sessionStorage.getItem("keyPassphrase");
@@ -33,7 +37,7 @@ const EncryptPage = () => {
     try {
       return (await invoke("get_credentials", { login })) as string;
     } catch (error) {
-      console.error("Brak zapisanego hasła lub błąd dostępu", error);
+      console.error("No password saved or access error", error);
       return null;
     }
   };
@@ -41,7 +45,6 @@ const EncryptPage = () => {
   const handleEncryptAndSign = async () => {
     if (!selectedFile) return;
 
-    // odczytanie hex zawartosci pliku tekstowego
     const buffer = await selectedFile.arrayBuffer();
     const bytes = new Uint8Array(buffer);
 
@@ -58,7 +61,7 @@ const EncryptPage = () => {
 
     const password = await getDecryptionKey();
     if (!password) {
-      setCalculated("Error: Brak hasła do klucza. Zaloguj się ponownie.");
+      setCalculated("Error: No password for key. Log in again.");
       return;
     }
 
@@ -66,11 +69,12 @@ const EncryptPage = () => {
     const keyModule = sessionStorage.getItem("keyModule");
 
     if (!encryptedPrivateKey || !keyModule) {
-      setCalculated("Error: Brak kluczy sesji. Zaloguj się ponownie.");
+      setCalculated("Error: No session keys. Log in again.");
       return;
     }
 
     setLoading(true);
+    setIsSigned(false); 
     setCalculated("Signing file locally...");
     setProgress(0);
 
@@ -89,12 +93,15 @@ const EncryptPage = () => {
         login,
         password,
         encryptedPrivateKey,
-        keyModule,
+        keyModule
       );
 
       clearInterval(progressInterval);
       setProgress(100);
-      setCalculated(`Success! File signed. ${signed_file.signature}`);
+      
+      setSignatureData(signed_file); 
+      setIsSigned(true);
+      setCalculated("Success! File signed.");
     } catch (error) {
       console.error("API Error:", error);
       clearInterval(progressInterval);
@@ -105,10 +112,54 @@ const EncryptPage = () => {
     }
   };
 
+  const handleDownloadZip = async () => {
+    if (!selectedFile || !signatureData) return;
+
+    const zip = new JSZip();
+
+    zip.file(selectedFile.name, selectedFile);
+
+    const metaData = {
+      user: login,
+      timestamp: new Date().toISOString(),
+      originalFileName: selectedFile.name,
+      signatureDetails: signatureData,
+    };
+
+    zip.file("signature_info.json", JSON.stringify(metaData, null, 2));
+
+    try {
+      const zipBytes = await zip.generateAsync({ type: "uint8array" });
+
+      const filePath = await save({
+        defaultPath: `Signed_${selectedFile.name.substring(0, selectedFile.name.lastIndexOf('.')) || selectedFile.name}.ss`,
+        filters: [
+          {
+            name: "SecureSign Archive",
+            extensions: ["ss"],
+          },
+          {
+            name: "ZIP Archive",
+            extensions: ["zip"],
+          },
+        ],
+      });
+
+      if (filePath) {
+        await writeFile(filePath, zipBytes);
+        console.log("File successfully saved to:", filePath);
+      }
+    } catch (error) {
+      console.error("Error saving ZIP file:", error);
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setSelectedFile(e.target.files[0]);
       setProgress(0);
+      setIsSigned(false); 
+      setSignatureData(null);
       setCalculated("Ready to sign");
     }
   };
@@ -118,6 +169,8 @@ const EncryptPage = () => {
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       setSelectedFile(e.dataTransfer.files[0]);
       setProgress(0);
+      setIsSigned(false); 
+      setSignatureData(null);
       setCalculated("Ready to sign");
     }
   };
@@ -187,7 +240,7 @@ const EncryptPage = () => {
           </div>
         )}
 
-        {selectedFile && (
+        {selectedFile && !isSigned && (
           <div className="mt-12 w-full max-w-2xl flex items-end justify-between border-t border-slate-100 pt-8 gap-4 animate-in fade-in slide-in-from-bottom-2">
             <div className="space-y-4 flex-1">
               <div className="flex flex-col space-y-1">
@@ -229,7 +282,23 @@ const EncryptPage = () => {
         )}
       </div>
 
-      <TempResultSection data={calculated} />
+      {!isSigned ? (
+        <TempResultSection data={calculated} />
+      ) : (
+        <div className="w-full flex flex-col items-center justify-center p-8 bg-green-50 border border-green-200 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-4">
+          <p className="text-2xl font-bold text-green-800 mb-2">File Signed Successfully! 🎉</p>
+          <p className="text-green-600 mb-6 text-center">
+            Your file and signature have been securely generated.
+          </p>
+          <button
+            onClick={handleDownloadZip}
+            className="flex items-center space-x-2 bg-[#0f172a] hover:bg-slate-800 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-sm"
+          >
+            <Download className="w-5 h-5" />
+            <span>Download ZIP package</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

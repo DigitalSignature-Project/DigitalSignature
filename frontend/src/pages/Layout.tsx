@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'; 
-import { Home, Lock, ShieldCheck, Settings, User, Shield, LogOut, ChevronDown, Power } from 'lucide-react';
+import { Lock, ShieldCheck, User, Shield, LogOut, ChevronDown, Power } from 'lucide-react';
 import { getCurrentWindow, LogicalSize } from '@tauri-apps/api/window';
 
 const Layout = () => {
@@ -9,7 +9,7 @@ const Layout = () => {
   const [username, setUsername] = useState("Użytkownik");
 
   useEffect(() => {
-    const storedName = localStorage.getItem("username") || sessionStorage.getItem("username");
+    const storedName = localStorage.getItem("login") || sessionStorage.getItem("login");
     if (storedName) setUsername(storedName);
 
     const expandWindow = async () => {
@@ -29,10 +29,8 @@ const Layout = () => {
   }, []);
 
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: Home },
     { name: 'Encrypt and Sign', path: '/encrypt', icon: Lock },
     { name: 'Verify Signature', path: '/verify', icon: ShieldCheck },
-    { name: 'Settings', path: '/settings', icon: Settings },
   ];
 
   const handleLogout = () => {

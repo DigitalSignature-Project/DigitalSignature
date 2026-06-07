@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Lock, Shield, Key } from "lucide-react";
 import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
-import { invoke } from "@tauri-apps/api/core";
 import {
   checkUserKey,
   registerNewUser,
@@ -21,7 +20,6 @@ const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>("LOGIN");
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [rememberMe, setRememberMe] = useState<boolean>(false);
 
   useEffect(() => {
     const shrinkWindow = async () => {
@@ -63,26 +61,13 @@ const AuthPage: React.FC = () => {
     const { login, keyPassphrase } = formData;
 
     try {
-      if (rememberMe) {
-        await invoke("save_credentials", {
-          login: login,
-          passphrase: keyPassphrase,
-        });
-
-        localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("login", login);
-
-        sessionStorage.removeItem("isAuthenticated");
-        sessionStorage.removeItem("login");
-        sessionStorage.removeItem("keyPassphrase");
-      } else {
         sessionStorage.setItem("isAuthenticated", "true");
         sessionStorage.setItem("login", login);
         sessionStorage.setItem("keyPassphrase", keyPassphrase);
 
         localStorage.removeItem("isAuthenticated");
         localStorage.removeItem("login");
-      }
+      
 
       navigate("/", { state: { keyPassphrase } });
     } catch (error) {
@@ -125,7 +110,7 @@ const AuthPage: React.FC = () => {
       const response = await checkUserKey(credentials);
 
       if (response) {
-        await finalizeAuth(); // Dodano await
+        await finalizeAuth(); 
       } else {
         setErrorMessage("Invalid key passphrase.");
       }
@@ -261,18 +246,7 @@ const AuthPage: React.FC = () => {
                       onChange={handleChange}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-4 h-4 rounded border-slate-300 text-[#1e40af] focus:ring-[#1e40af] bg-slate-50"
-                      />
-                      <span className="text-sm text-slate-500 font-medium">
-                        Remember me
-                      </span>
-                    </label>
+                  <div className="flex justify-end">
                     <button
                       type="button"
                       onClick={() => changeView("FORGOT_PASSWORD")}
@@ -347,15 +321,6 @@ const AuthPage: React.FC = () => {
                   </div>
                   <div className="mt-2 flex items-center justify-start">
                     <label className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-4 h-4 rounded border-slate-300 text-[#1e40af] focus:ring-[#1e40af] bg-slate-50"
-                      />
-                      <span className="text-sm text-slate-500 font-medium">
-                        Remember me
-                      </span>
                     </label>
                   </div>
                 </>

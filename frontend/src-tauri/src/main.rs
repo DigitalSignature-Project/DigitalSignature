@@ -25,15 +25,15 @@ fn delete_credentials(login: &str) -> Result<(), String> {
 }
 
 fn main() {
-  app_lib::run();
+    app_lib::run();
     tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
-            save_credentials, 
-            get_credentials, 
+            save_credentials,
+            get_credentials,
             delete_credentials
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-
-
