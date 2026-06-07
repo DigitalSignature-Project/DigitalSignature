@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./pages/Layout";
+import HomePage from "./pages/HomePage";
 import EncryptPage from "./pages/EncryptPage";
 import VerifyPage from "./pages/VerifyPage";
 import AuthPage from "./pages/AuthPage";
@@ -24,24 +25,10 @@ const App = () => {
         <Route path="/login" element={<AuthPage />} />
         
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route
-            index
-            element={
-              <div className="text-2xl font-bold text-slate-800">
-                This will be the Dashboard
-              </div>
-            }
-          />
+          {/* Index route: wyświetli się domyślnie, gdy użytkownik wejdzie na '/' */}
+          <Route index element={<HomePage />} />
           <Route path="encrypt" element={<EncryptPage />} />
           <Route path="verify" element={<VerifyPage />} />
-          <Route
-            path="settings"
-            element={
-              <div className="text-2xl font-bold text-slate-800">
-                Settings will be here
-              </div>
-            }
-          />
         </Route>
       </Routes>
     </BrowserRouter>

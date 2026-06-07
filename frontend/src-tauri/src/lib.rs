@@ -1,4 +1,4 @@
-use std::process::{Command, Child};
+use std::process::{Child, Command};
 use std::sync::Mutex;
 use tauri::{Manager, WindowEvent};
 
@@ -7,6 +7,8 @@ struct BackendProcess(pub Mutex<Option<Child>>);
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_dialog::init())
         .manage(BackendProcess(Mutex::new(None)))
         .setup(|app| {
             #[cfg(all(not(debug_assertions), target_os = "windows"))]
@@ -30,14 +32,18 @@ pub fn run() {
             if let WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
 
-                let app_handle = window.app_handle().clone(); 
+                let app_handle = window.app_handle().clone();
 
                 std::thread::spawn(move || {
-                    let optional_child = app_handle.state::<BackendProcess>().0.lock().unwrap().take();
-                    
+                    let optional_child = app_handle
+                        .state::<BackendProcess>()
+                        .0
+                        .lock()
+                        .unwrap()
+                        .take();
+
                     #[allow(unused_mut)]
                     if let Some(mut child) = optional_child {
-                        
                         #[cfg(target_os = "windows")]
                         {
                             let pid = child.id();
