@@ -171,11 +171,7 @@ const EncryptPage = () => {
           {
             name: "SecureSign Archive",
             extensions: ["ss"],
-          },
-          {
-            name: "ZIP Archive",
-            extensions: ["zip"],
-          },
+          }
         ],
       });
 
@@ -184,7 +180,7 @@ const EncryptPage = () => {
         console.log("File successfully saved to:", filePath);
       }
     } catch (error) {
-      console.error("Error saving ZIP file:", error);
+      console.error("Error saving SS file:", error);
     }
   };
 
@@ -238,7 +234,7 @@ const EncryptPage = () => {
             <p className="text-center text-sm text-slate-500">
               Click to choose
               <br />
-              <span className="font-bold text-[#0f172a]">FILE</span>
+              <span className="font-bold text-[#0f172a]">SS FILE</span>
             </p>
           </div>
         ) : (
@@ -273,8 +269,8 @@ const EncryptPage = () => {
         )}
 
         {selectedFile && !isSigned && (
-          <div className="mt-12 w-full max-w-2xl flex items-end justify-between border-t border-slate-100 pt-8 gap-4 animate-in fade-in slide-in-from-bottom-2">
-            <div className="space-y-4 flex-1">
+          <div className="mt-12 w-full max-w-2xl flex flex-col items-center border-t border-slate-100 pt-8 gap-4 animate-in fade-in slide-in-from-bottom-2">
+            <div className="space-y-4 w-full max-w-md">
               <div className="flex flex-col space-y-1">
                 <label className="text-xs font-semibold text-slate-500 uppercase">
                   Algorithm
@@ -313,7 +309,7 @@ const EncryptPage = () => {
 
                   <div className="flex flex-col space-y-1">
                     <label className="text-xs font-semibold text-slate-500 uppercase">
-                      Hash Function 1
+                      Hash Function
                     </label>
                     <select
                       value={hash_function_1}
@@ -328,7 +324,7 @@ const EncryptPage = () => {
 
                   <div className="flex flex-col space-y-1">
                     <label className="text-xs font-semibold text-slate-500 uppercase">
-                      Hash Function 2
+                      MGF1 Hash
                     </label>
                     <select
                       value={hash_function_2}
@@ -346,7 +342,7 @@ const EncryptPage = () => {
               {(algorithm === "ElGamal" || algorithm === "ECDSA") && (
                 <div className="flex flex-col space-y-1">
                   <label className="text-xs font-semibold text-slate-500 uppercase">
-                    Hash Function 1
+                    Hash Function
                   </label>
                   <select
                     value={hash_function_1}
@@ -384,7 +380,7 @@ const EncryptPage = () => {
             className="flex items-center cursor-pointer space-x-2 bg-[#0f172a] hover:bg-slate-800 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-sm"
           >
             <Download className="w-5 h-5" />
-            <span>Download ZIP package</span>
+            <span>Download SS package</span>
           </button>
         </div>
       )}

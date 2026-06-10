@@ -101,18 +101,23 @@ const AuthPage: React.FC = () => {
     }
 
     if (viewMode === "LOGIN_PASSPHRASE") {
-      const credentials = {
-        login: formData.login,
-        password_hash: formData.password,
-        key: formData.keyPassphrase,
-      };
+      try {
+        const credentials = {
+          login: formData.login,
+          password_hash: formData.password,
+          key: formData.keyPassphrase,
+        };
 
-      const response = await checkUserKey(credentials);
+        const response = await checkUserKey(credentials);
 
-      if (response) {
-        await finalizeAuth(); 
-      } else {
-        setErrorMessage("Invalid key passphrase.");
+        if (response === true) {
+          await finalizeAuth();
+        } else {
+          setErrorMessage("Invalid key passphrase.");
+        }
+      } catch (error) {
+        console.error("Error checking user key:", error);
+        setErrorMessage("Error verifying key passphrase. Please try again.");
       }
       return;
     }
@@ -250,7 +255,7 @@ const AuthPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => changeView("FORGOT_PASSWORD")}
-                      className="text-sm font-medium text-slate-400 hover:text-[#0f172a] transition-colors underline underline-offset-4"
+                      className="text-sm font-medium text-slate-400 hover:text-[#0f172a] transition-colors underline underline-offset-4 hidden"
                     >
                       Forgot password?
                     </button>
@@ -392,7 +397,7 @@ const AuthPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => changeView("FORGOT_PASSWORD")}
-                  className="text-sm font-bold text-slate-400 hover:text-red-500 transition-colors"
+                  className="text-sm font-bold text-slate-400 hover:text-red-500 transition-colors hidden"
                 >
                   Reset private key
                 </button>
