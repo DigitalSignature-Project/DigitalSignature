@@ -72,7 +72,7 @@ async def verify_user_login(data: VerifyUserLogin) -> VerifyUserLoginResponse:
 async def retrieve_public_key(login: str) -> RetrievePublicKeyResponse:
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            f"https://digital-signature-auth.digitalsignature-auth.workers.dev/api/public-key/{login}",
+            f"https://digital-signature-auth.digitalsignature-auth.workers.dev/api/public-keys/{login}",
             headers={"Content-Type": "application/json"},
         )
 
