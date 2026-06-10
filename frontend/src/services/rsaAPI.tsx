@@ -44,11 +44,11 @@ export const signInRsaFile = async (
   file_content: string,
   login: string,
   password: string,
-  encrypted_private_key?: string,
-  key_module?: string,
-  salt_length?: number,
-  hash_function_1?: string,
-  hash_function_2?: string,
+  encrypted_private_key: string,
+  key_module: string,
+  salt_length: string,
+  hash_function_1: string,
+  hash_function_2: string,
 ) => {
   const { data } = await axios.post<SignInFileRsaResponse>(
     "http://127.0.0.1:2138/signature/generate_rsa_signature",
@@ -132,9 +132,9 @@ export const verifyRsaSignature = async (
   file_content: string,
   signature: string,
   login: string,
-  salt_length?: number,
-  hash_function_1?: string,
-  hash_function_2?: string,
+  salt_length: string,
+  hash_function_1: string,
+  hash_function_2: string,
 ) => {
   const { data } = await axios.post<VerifyRsaSignatureResponse>(
     "http://127.0.0.1:2138/signature/verify_rsa_signature",

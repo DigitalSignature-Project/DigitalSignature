@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class RsaSignatureResponse(BaseModel):
     signature: str
 
@@ -9,7 +10,7 @@ class RsaSignature(BaseModel):
     login: str
     password: str
     encrypted_private_key: str
-    key_module: str 
+    key_module: str
     salt_length: str
     hash_function_1: str
     hash_function_2: str
@@ -26,4 +27,3 @@ class VerifyRsaSignature(BaseModel):
     salt_length: str
     hash_function_1: str
     hash_function_2: str
-    

@@ -4,7 +4,11 @@ import { TempResultSection } from "../components/TempResultSection";
 import { useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
-import { signInRsaFile, signInElgamalFile, signInEcdsaFile } from "../services/rsaAPI";
+import {
+  signInRsaFile,
+  signInElgamalFile,
+  signInEcdsaFile,
+} from "../services/rsaAPI";
 import JSZip from "jszip";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
@@ -97,7 +101,7 @@ const EncryptPage = () => {
           password,
           encryptedPrivateKey,
           keyModule,
-          saltLength,
+          saltLength.toString(),
           hash_function_1,
           hash_function_2,
         );
