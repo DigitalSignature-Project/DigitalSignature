@@ -37,10 +37,38 @@ async def create_rsa_signature(
     file_content: str,
     login: str,
     password: str,
-    encrypted_private_key: str | None = None,
-    key_module: str | None = None,
+    encrypted_private_key: str,
+    key_module: str,
+    salt_length: str,
+    hash_function_1: str,
+    hash_function_2: str
 ) -> str:
-    pss_config = DigiSign.RSA.PSSConfig(32, DigiSign.HASH.SHA256, DigiSign.HASH.SHA256)
+    try:
+        salt_length = int(salt_length)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="salt_length must be an integer")
+    
+    match hash_function_1:
+        case "SHA256":
+            hash_1 = DigiSign.HASH.SHA256
+        case "SHA3_256":
+            hash_1 = DigiSign.HASH.SHA3_256
+        case "SHA3_512":
+            hash_1 = DigiSign.HASH.SHA3_512
+        case _:
+            raise ValueError("Unsupported hash function")
+        
+    match hash_function_2:
+        case "SHA256":
+            hash_2 = DigiSign.HASH.SHA256
+        case "SHA3_256":
+            hash_2 = DigiSign.HASH.SHA3_256
+        case "SHA3_512":
+            hash_2 = DigiSign.HASH.SHA3_512
+        case _:
+            raise ValueError("Unsupported hash function")
+
+    pss_config = DigiSign.RSA.PSSConfig(salt_length, hash_1, hash_2)
 
     if not encrypted_private_key or not key_module:
         keys = await _fetch_user_keys(login)
