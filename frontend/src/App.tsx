@@ -25,7 +25,6 @@ const App = () => {
         <Route path="/login" element={<AuthPage />} />
         
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          {/* Index route: wyświetli się domyślnie, gdy użytkownik wejdzie na '/' */}
           <Route index element={<HomePage />} />
           <Route path="encrypt" element={<EncryptPage />} />
           <Route path="verify" element={<VerifyPage />} />
