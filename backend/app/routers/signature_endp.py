@@ -10,26 +10,21 @@ router = APIRouter(dependencies=[Depends(verify_token)])
 
 @router.post("/generate_rsa_signature", response_model=RsaSignatureResponse)
 async def generate_rsa_signature(data: RsaSignature) -> RsaSignatureResponse:
-    file_content = data.file_content
-    login = data.login
-    password = data.password
-
     signature = await create_rsa_signature(
-        file_content,
-        login,
-        password,
+        data.file_content,
+        data.login,
+        data.password,
         data.encrypted_private_key,
         data.key_module,
+        data.salt_length,
+        data.hash_function_1,
+        data.hash_function_2
     )
     return RsaSignatureResponse(signature=signature)
 
 
 @router.post("/verify_rsa_signature", response_model=VerifyRsaSignatureResponse)
 async def verify_rsa_sign(data: VerifyRsaSignature) -> VerifyRsaSignatureResponse:
-    file_content = data.file_content
-    signature = data.signature
-    login = data.login
-
-    result = await verify_rsa_signature(file_content, signature, login)
+    result = await verify_rsa_signature(data.file_content, data.signature, data.login, data.salt_length, data.hash_function_1, data.hash_function_2)
     return VerifyRsaSignatureResponse(is_valid=result)
     
