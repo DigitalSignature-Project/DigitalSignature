@@ -11,6 +11,7 @@
 - `npm install axios`
 - `npm install react-router-dom lucide-react`
 - `npm install -D @types/react-router-dom`
+- `npm install jszip`
 
 3. Build frontend:
 

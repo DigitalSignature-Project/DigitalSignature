@@ -126,9 +126,9 @@ const VerifyPage = () => {
           >
             <Plus className="w-16 h-16 text-[#0f172a] mb-2 group-hover:scale-110 transition-transform" />
             <p className="text-center text-sm text-slate-500">
-              Drag and drop file here or
+              Click to choose
               <br />
-              <span className="font-bold text-[#0f172a]">CLICK TO CHOOSE</span>
+              <span className="font-bold text-[#0f172a]">FILE</span>
             </p>
           </div>
         ) : (

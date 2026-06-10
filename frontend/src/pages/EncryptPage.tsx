@@ -12,7 +12,7 @@ import { writeFile } from "@tauri-apps/plugin-fs";
 const EncryptPage = () => {
   const location = useLocation();
   const [loading, setLoading] = useState<boolean>(false);
-  const [calculated, setCalculated] = useState<string>("Ready to sign");
+  const [calculated, setCalculated] = useState<string>("");
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [progress, setProgress] = useState<number>(0);
@@ -75,7 +75,6 @@ const EncryptPage = () => {
 
     setLoading(true);
     setIsSigned(false);
-    setCalculated("Signing file locally...");
     setProgress(0);
 
     const progressInterval = setInterval(() => {
@@ -101,7 +100,6 @@ const EncryptPage = () => {
 
       setSignatureData(signed_file);
       setIsSigned(true);
-      setCalculated("Success! File signed.");
     } catch (error) {
       console.error("API Error:", error);
       clearInterval(progressInterval);
@@ -160,7 +158,6 @@ const EncryptPage = () => {
       setProgress(0);
       setIsSigned(false);
       setSignatureData(null);
-      setCalculated("Ready to sign");
     }
   };
 
@@ -171,7 +168,6 @@ const EncryptPage = () => {
       setProgress(0);
       setIsSigned(false);
       setSignatureData(null);
-      setCalculated("Ready to sign");
     }
   };
 
@@ -204,9 +200,9 @@ const EncryptPage = () => {
           >
             <Plus className="w-16 h-16 text-[#0f172a] mb-2 group-hover:scale-110 transition-transform" />
             <p className="text-center text-sm text-slate-500">
-              Drag and drop file here or
+              Click to choose
               <br />
-              <span className="font-bold text-[#0f172a]">CLICK TO CHOOSE</span>
+              <span className="font-bold text-[#0f172a]">FILE</span>
             </p>
           </div>
         ) : (
@@ -294,7 +290,7 @@ const EncryptPage = () => {
           </p>
           <button
             onClick={handleDownloadZip}
-            className="flex items-center space-x-2 bg-[#0f172a] hover:bg-slate-800 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-sm"
+            className="flex items-center cursor-pointer space-x-2 bg-[#0f172a] hover:bg-slate-800 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-sm"
           >
             <Download className="w-5 h-5" />
             <span>Download ZIP package</span>
