@@ -8,8 +8,11 @@ class RsaSignature(BaseModel):
     file_content: str
     login: str
     password: str
-    encrypted_private_key: str | None = None
-    key_module: str | None = None
+    encrypted_private_key: str
+    key_module: str 
+    salt_length: str
+    hash_function_1: str
+    hash_function_2: str
 
 
 class VerifyRsaSignatureResponse(BaseModel):
@@ -20,3 +23,7 @@ class VerifyRsaSignature(BaseModel):
     file_content: str
     signature: str
     login: str
+    salt_length: str
+    hash_function_1: str
+    hash_function_2: str
+    
