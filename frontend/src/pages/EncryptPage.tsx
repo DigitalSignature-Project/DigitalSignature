@@ -1,11 +1,11 @@
-import { Plus, FileText, Download } from "lucide-react"; 
+import { Plus, FileText, Download } from "lucide-react";
 import { EncryptAndSignBtn } from "../components/EncryptAndSignBtn";
 import { TempResultSection } from "../components/TempResultSection";
 import { useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { signInRsaFile } from "../services/rsaAPI";
-import JSZip from "jszip"; 
+import JSZip from "jszip";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
 
@@ -23,10 +23,12 @@ const EncryptPage = () => {
   const [isSigned, setIsSigned] = useState<boolean>(false);
   const [signatureData, setSignatureData] = useState<any>(null);
 
-  const login = localStorage.getItem("login") || sessionStorage.getItem("login");
+  const login =
+    localStorage.getItem("login") || sessionStorage.getItem("login");
 
   const getDecryptionKey = async (): Promise<string | null> => {
-    const fromState = (location.state as { keyPassphrase?: string } | null)?.keyPassphrase;
+    const fromState = (location.state as { keyPassphrase?: string } | null)
+      ?.keyPassphrase;
     if (fromState) return fromState;
 
     const fromSession = sessionStorage.getItem("keyPassphrase");
@@ -52,8 +54,6 @@ const EncryptPage = () => {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    console.log(file_content);
-
     if (!login) {
       setCalculated("Error: User is not logged in.");
       return;
@@ -74,7 +74,7 @@ const EncryptPage = () => {
     }
 
     setLoading(true);
-    setIsSigned(false); 
+    setIsSigned(false);
     setCalculated("Signing file locally...");
     setProgress(0);
 
@@ -93,13 +93,13 @@ const EncryptPage = () => {
         login,
         password,
         encryptedPrivateKey,
-        keyModule
+        keyModule,
       );
 
       clearInterval(progressInterval);
       setProgress(100);
-      
-      setSignatureData(signed_file); 
+
+      setSignatureData(signed_file);
       setIsSigned(true);
       setCalculated("Success! File signed.");
     } catch (error) {
@@ -132,7 +132,7 @@ const EncryptPage = () => {
       const zipBytes = await zip.generateAsync({ type: "uint8array" });
 
       const filePath = await save({
-        defaultPath: `Signed_${selectedFile.name.substring(0, selectedFile.name.lastIndexOf('.')) || selectedFile.name}.ss`,
+        defaultPath: `Signed_${selectedFile.name.substring(0, selectedFile.name.lastIndexOf(".")) || selectedFile.name}.ss`,
         filters: [
           {
             name: "SecureSign Archive",
@@ -158,7 +158,7 @@ const EncryptPage = () => {
     if (e.target.files && e.target.files.length > 0) {
       setSelectedFile(e.target.files[0]);
       setProgress(0);
-      setIsSigned(false); 
+      setIsSigned(false);
       setSignatureData(null);
       setCalculated("Ready to sign");
     }
@@ -169,7 +169,7 @@ const EncryptPage = () => {
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       setSelectedFile(e.dataTransfer.files[0]);
       setProgress(0);
-      setIsSigned(false); 
+      setIsSigned(false);
       setSignatureData(null);
       setCalculated("Ready to sign");
     }
@@ -286,7 +286,9 @@ const EncryptPage = () => {
         <TempResultSection data={calculated} />
       ) : (
         <div className="w-full flex flex-col items-center justify-center p-8 bg-green-50 border border-green-200 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-4">
-          <p className="text-2xl font-bold text-green-800 mb-2">File Signed Successfully! 🎉</p>
+          <p className="text-2xl font-bold text-green-800 mb-2">
+            File Signed Successfully! 🎉
+          </p>
           <p className="text-green-600 mb-6 text-center">
             Your file and signature have been securely generated.
           </p>

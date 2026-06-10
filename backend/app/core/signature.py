@@ -63,7 +63,7 @@ async def verify_rsa_signature(file_content: str, signature: str, login: str) ->
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            f"https://digital-signature-auth.digitalsignature-auth.workers.dev/api/public-key/{login}",
+            f"https://digital-signature-auth.digitalsignature-auth.workers.dev/api/public-keys/{login}",
             headers={"Content-Type": "application/json"},
         )
 
