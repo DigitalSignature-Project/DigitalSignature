@@ -4,7 +4,7 @@ import { TempResultSection } from "../components/TempResultSection";
 import { useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
-import { signInRsaFile } from "../services/rsaAPI";
+import { signInRsaFile, signInElgamalFile, signInEcdsaFile } from "../services/rsaAPI";
 import JSZip from "jszip";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
@@ -16,8 +16,10 @@ const EncryptPage = () => {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [progress, setProgress] = useState<number>(0);
-  const [algorithm, setAlgorithm] = useState<string>("algo1");
-  const [hashType, setHashType] = useState<string>("hash1");
+  const [algorithm, setAlgorithm] = useState<string>("RSA");
+  const [saltLength, setSaltLength] = useState<number>(32);
+  const [hash_function_1, setHash_function_1] = useState<string>("SHA256");
+  const [hash_function_2, setHash_function_2] = useState<string>("SHA256");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isSigned, setIsSigned] = useState<boolean>(false);
@@ -87,18 +89,50 @@ const EncryptPage = () => {
     }, 150);
 
     try {
-      const signed_file = await signInRsaFile(
-        file_content,
-        login,
-        password,
-        encryptedPrivateKey,
-        keyModule,
-      );
+      let signed_file;
+      if (algorithm === "RSA") {
+        signed_file = await signInRsaFile(
+          file_content,
+          login,
+          password,
+          encryptedPrivateKey,
+          keyModule,
+          saltLength,
+          hash_function_1,
+          hash_function_2,
+        );
+      } else if (algorithm === "ElGamal") {
+        signed_file = await signInElgamalFile(
+          file_content,
+          login,
+          password,
+          encryptedPrivateKey,
+          keyModule,
+          hash_function_1,
+        );
+      } else if (algorithm === "ECDSA") {
+        signed_file = await signInEcdsaFile(
+          file_content,
+          login,
+          password,
+          encryptedPrivateKey,
+          keyModule,
+          hash_function_1,
+        );
+      }
 
       clearInterval(progressInterval);
       setProgress(100);
 
-      setSignatureData(signed_file);
+      setSignatureData({
+        ...signed_file,
+        algorithm,
+        options: {
+          saltLength: algorithm === "RSA" ? saltLength : undefined,
+          hash_function_1,
+          hash_function_2: algorithm === "RSA" ? hash_function_2 : undefined,
+        },
+      });
       setIsSigned(true);
     } catch (error) {
       console.error("API Error:", error);
@@ -121,6 +155,8 @@ const EncryptPage = () => {
       user: login,
       timestamp: new Date().toISOString(),
       originalFileName: selectedFile.name,
+      algorithm: signatureData.algorithm,
+      algorithmOptions: signatureData.options,
       signatureDetails: signatureData,
     };
 
@@ -248,26 +284,81 @@ const EncryptPage = () => {
                   onChange={(e) => setAlgorithm(e.target.value)}
                   className="p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
                 >
-                  <option value="algo1">Work in progress (Option 1)</option>
-                  <option value="algo2">Work in progress (Option 2)</option>
-                  <option value="algo3">Work in progress (Option 3)</option>
+                  <option value="RSA">RSA</option>
+                  <option value="ElGamal">ElGamal</option>
+                  <option value="ECDSA">ECDSA</option>
                 </select>
               </div>
 
-              <div className="flex flex-col space-y-1">
-                <label className="text-xs font-semibold text-slate-500 uppercase">
-                  Hash Type
-                </label>
-                <select
-                  value={hashType}
-                  onChange={(e) => setHashType(e.target.value)}
-                  className="p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
-                >
-                  <option value="hash1">Work in progress (Hash 1)</option>
-                  <option value="hash2">Work in progress (Hash 2)</option>
-                  <option value="hash3">Work in progress (Hash 3)</option>
-                </select>
-              </div>
+              {algorithm === "RSA" && (
+                <>
+                  <div className="flex flex-col space-y-1">
+                    <label className="text-xs font-semibold text-slate-500 uppercase">
+                      Salt Length
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="256"
+                      value={saltLength}
+                      onChange={(e) => {
+                        const value = Number(e.target.value);
+                        if (value >= 1 && value <= 256) {
+                          setSaltLength(value);
+                        }
+                      }}
+                      className="p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
+                    />
+                  </div>
+
+                  <div className="flex flex-col space-y-1">
+                    <label className="text-xs font-semibold text-slate-500 uppercase">
+                      Hash Function 1
+                    </label>
+                    <select
+                      value={hash_function_1}
+                      onChange={(e) => setHash_function_1(e.target.value)}
+                      className="p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
+                    >
+                      <option value="SHA256">SHA256</option>
+                      <option value="SHA3_256">SHA3_256</option>
+                      <option value="SHA3_512">SHA3_512</option>
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col space-y-1">
+                    <label className="text-xs font-semibold text-slate-500 uppercase">
+                      Hash Function 2
+                    </label>
+                    <select
+                      value={hash_function_2}
+                      onChange={(e) => setHash_function_2(e.target.value)}
+                      className="p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
+                    >
+                      <option value="SHA256">SHA256</option>
+                      <option value="SHA3_256">SHA3_256</option>
+                      <option value="SHA3_512">SHA3_512</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {(algorithm === "ElGamal" || algorithm === "ECDSA") && (
+                <div className="flex flex-col space-y-1">
+                  <label className="text-xs font-semibold text-slate-500 uppercase">
+                    Hash Function 1
+                  </label>
+                  <select
+                    value={hash_function_1}
+                    onChange={(e) => setHash_function_1(e.target.value)}
+                    className="p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
+                  >
+                    <option value="SHA256">SHA256</option>
+                    <option value="SHA3_256">SHA3_256</option>
+                    <option value="SHA3_512">SHA3_512</option>
+                  </select>
+                </div>
+              )}
             </div>
 
             <EncryptAndSignBtn

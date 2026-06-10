@@ -1,7 +1,8 @@
 import { FileText, Check, ShieldAlert, Plus } from "lucide-react";
 import { VerifySignatureBtn } from "../components/VerifySignatureBtn";
 import { useState, useRef } from "react";
-import { verifyFile, type VerifyFileResponse } from "../services/serverAPI";
+import { verifyRsaSignature, verifyElgamalSignature, verifyEcdsaSignature } from "../services/rsaAPI";
+import JSZip from "jszip";
 
 const GradientCheck = () => (
   <svg
@@ -20,6 +21,12 @@ const GradientCheck = () => (
   </svg>
 );
 
+type VerifyFileResponse = {
+  isValid: boolean;
+  signer: string;
+  date: string;
+};
+
 const VerifyPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -29,17 +36,6 @@ const VerifyPage = () => {
 
   const handleVerifySignature = async () => {
     if (!selectedFile) return;
-
-    const filePath = (selectedFile as any).path;
-
-    if (!filePath) {
-      setResult({
-        isValid: false,
-        signer: "Błąd uprawnień",
-        date: "Brak dostępu do ścieżki pliku (Tauri API)",
-      });
-      return;
-    }
 
     setLoading(true);
     setResult(null);
@@ -55,15 +51,72 @@ const VerifyPage = () => {
     }, 150);
 
     try {
-      const data = await verifyFile(filePath);
+      const zip = new JSZip();
+      const zipContents = await zip.loadAsync(selectedFile);
+
+      const signatureInfoFile = zipContents.file("signature_info.json");
+      if (!signatureInfoFile) {
+        throw new Error("signature_info.json not found in archive");
+      }
+
+      const signatureInfoContent = await signatureInfoFile.async("string");
+      const signatureInfo = JSON.parse(signatureInfoContent);
+
+      const originalFileName = signatureInfo.originalFileName;
+      const originalFile = zipContents.file(originalFileName);
+      if (!originalFile) {
+        throw new Error(`Original file ${originalFileName} not found in archive`);
+      }
+
+      const originalFileContent = await originalFile.async("uint8array");
+      const file_content = Array.from(originalFileContent)
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      const signature = signatureInfo.signatureDetails.signature;
+      const login = signatureInfo.user;
+      const algorithm = signatureInfo.algorithm;
+      const options = signatureInfo.algorithmOptions;
+
+      let isValid = false;
+
+      if (algorithm === "RSA") {
+        const result = await verifyRsaSignature(
+          file_content,
+          signature,
+          login,
+          options.saltLength,
+          options.hashFunction,
+          options.mgf1Hash,
+        );
+        isValid = result.is_valid;
+      } else if (algorithm === "ElGamal") {
+        const result = await verifyElgamalSignature(
+          file_content,
+          signature,
+          login,
+          options.hashFunction,
+        );
+        isValid = result.is_valid;
+      } else if (algorithm === "ECDSA") {
+        const result = await verifyEcdsaSignature(
+          file_content,
+          signature,
+          login,
+          options.hashFunction,
+        );
+        isValid = result.is_valid;
+      } else {
+        throw new Error(`Unknown algorithm: ${algorithm}`);
+      }
 
       clearInterval(progressInterval);
       setProgress(100);
 
       setResult({
-        isValid: data.isValid,
-        signer: data.signer,
-        date: data.date,
+        isValid,
+        signer: login,
+        date: signatureInfo.timestamp,
       });
     } catch (error) {
       console.error("Błąd podczas weryfikacji:", error);
@@ -71,7 +124,7 @@ const VerifyPage = () => {
       setProgress(0);
       setResult({
         isValid: false,
-        signer: "Brak danych (Błąd API)",
+        signer: "Brak danych (Błąd weryfikacji)",
         date: "Brak danych",
       });
     } finally {
