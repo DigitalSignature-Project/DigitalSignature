@@ -3,78 +3,88 @@
 
 namespace digisign {
 
-bool miller_rabin(const BigInt& n, int rounds, RandomGenerator& rng, int w, std::vector<BigInt>& table)
+bool miller_rabin(const BigInt& n, int rounds, RandomGenerator& rng,
+                  int w, std::vector<BigInt>& table)
 {
     BigInt one = BigInt::one();
     BigInt two = BigInt::two();
 
+    // Handle trivial cases
     if (n == two)
         return true;
-
     if (n < two)
         return false;
-
     if (!n.isOdd())
         return false;
 
+    // Write n − 1 = d · 2^s with d odd
     BigInt n_minus_one = n - 1;
     BigInt n_minus_two = n - 2;
 
     BigInt d = n_minus_one;
     size_t s = 0;
 
+    // Prepare Montgomery constants
     size_t n_limbs = n.used;
 
+    // R = 2^(64·(n_limbs+1))
     BigInt R((n_limbs + 1) * 64);
     R.limbs[n_limbs] = 1;
     R.used = n_limbs + 1;
 
-    BigInt R2 = (R * R) % n;
+    BigInt R2 = (R * R) % n;        // R² mod n
+    uint64_t n0_inv = n_inv(n, 6); // n⁻¹ mod 2⁶⁴ (Montgomery)
 
-    uint64_t n0_inv = n_inv(n, 6);
-
-    BigInt one_R = R % n;
+    BigInt one_R = R % n;          // 1 in Montgomery domain
     BigInt n_minus_one_R = n - one_R;
 
-    while (!d.isOdd())
-    {
+    // Factor out powers of 2
+    while (!d.isOdd()) {
         d = d >> 1;
         s++;
     }
 
+    // Perform Miller–Rabin rounds
     for (int i = 0; i < rounds; i++)
     {
+        // Choose random base a ∈ [2, n−2]
         BigInt a = rng.random_range(two, n_minus_two);
 
+        // Compute x = a^d mod n in Montgomery domain
         BigInt x_R = montgomery_mod_pow_raw(a, d, n, w, table, R2, n0_inv);
 
+        // If x ≡ 1 or x ≡ −1 mod n, continue
         if (x_R == one_R || x_R == n_minus_one_R)
             continue;
 
         bool witness = true;
 
+        // Square repeatedly: x ← x² mod n
         for (size_t r = 1; r < s; r++)
         {
             x_R = montgomery_reduce(x_R * x_R, n, n0_inv);
 
-            if (x_R == n_minus_one_R)
-            {
+            if (x_R == n_minus_one_R) {
                 witness = false;
                 break;
             }
         }
 
+        // If no −1 encountered → composite
         if (witness)
             return false;
     }
 
-    return true;
+    return true; // probably prime
 }
 
-bool small_prime_test(const BigInt& n) {
+bool small_prime_test(const BigInt& n)
+{
+    // Reject even numbers immediately
+    if (!n.isOdd())
+        return false;
 
-    if (!n.isOdd()) return false;
-
+    // Precomputed primes < 1000 and Barrett constants
     static const uint16_t small_primes[] = {
         19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79,
         83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211,
@@ -127,39 +137,42 @@ bool small_prime_test(const BigInt& n) {
     return true;
 }
 
-BigInt generate_prime(size_t bits, int miller_rabin_rounds, RandomGenerator& rng) {
+BigInt generate_prime(size_t bits, int miller_rabin_rounds, RandomGenerator& rng)
+{
     BigInt candidate(bits);
 
+    // Choose window size for Montgomery exponentiation
     int w;
-    if (bits < 256) w = 4;
+    if (bits < 256)      w = 4;
     else if (bits < 1024) w = 5;
     else if (bits < 2048) w = 6;
-    else w = 7;
+    else                 w = 7;
 
     int table_size = 1 << (w - 1);
     std::vector<BigInt> table(table_size);
 
     while (true) {
+        // Generate candidate using wheel factorization
         rng.generate_random_bigint_prime_candidate(candidate, bits);
 
-        if (!small_prime_test(candidate)) {
+        // Quick sieve
+        if (!small_prime_test(candidate))
             continue;
-        }
 
-        if (miller_rabin(candidate, miller_rabin_rounds, rng, w, table)) {
+        // Miller–Rabin
+        if (miller_rabin(candidate, miller_rabin_rounds, rng, w, table))
             return candidate;
-        }
     }
 }
 
-BigInt generate_prime_parallel_omp(size_t bits, int miller_rabin_rounds, int max_threads) {
+BigInt generate_prime_parallel_omp(size_t bits, int miller_rabin_rounds, int max_threads)
+{
+    // Choose window size
     int w;
-    if (bits < 256) w = 4;
+    if (bits < 256)      w = 4;
     else if (bits < 1024) w = 5;
     else if (bits < 2048) w = 6;
     else w = 7;
-
-    int table_size = 1 << (w - 1);
 
     BigInt prime_candidate(0);
     BigInt result;
@@ -187,7 +200,8 @@ BigInt generate_prime_parallel_omp(size_t bits, int miller_rabin_rounds, int max
                 break;
             }
 
-            if (found) break;
+            if (found)
+                break;
         }
     }
 

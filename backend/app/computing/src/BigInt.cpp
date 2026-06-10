@@ -8,11 +8,13 @@ namespace digisign {
 
 BigInt::BigInt()
 {
+    // Empty BigInt = 0
     used = 0;
 }
 
 BigInt::BigInt(size_t bits)
 {
+    // Allocate enough limbs to hold `bits` bits
     size_t size = (bits + 63) / 64;
     limbs.resize(size);
     used = size;
@@ -20,6 +22,7 @@ BigInt::BigInt(size_t bits)
 
 BigInt BigInt::uint64(uint64_t v)
 {
+    // Fast constructor for small integers
     BigInt r(64);
     r.limbs[0] = v;
     r.used = (v == 0) ? 0 : 1;
@@ -28,16 +31,17 @@ BigInt BigInt::uint64(uint64_t v)
 
 BigInt BigInt::vectoruint8(const std::vector<uint8_t>& v)
 {
+    // Convert big‑endian bytes to little‑endian 64‑bit limbs
     size_t limbCount = (v.size() + 7) / 8;
     BigInt r(limbCount * 64);
 
     for (size_t i = 0; i < limbCount; i++) {
         uint64_t limb = 0;
 
+        // Pack 8 bytes into one 64‑bit limb
         for (size_t j = 0; j < 8; j++) {
             size_t byteIndex = v.size() - 1 - (i * 8 + j);
             uint8_t byte = (byteIndex < v.size()) ? v[byteIndex] : 0;
-
             limb |= uint64_t(byte) << (8 * j);
         }
 
@@ -47,23 +51,18 @@ BigInt BigInt::vectoruint8(const std::vector<uint8_t>& v)
     return r;
 }
 
-BigInt BigInt::one()
-{
-    return uint64(1);
-}
-
-BigInt BigInt::two()
-{
-    return uint64(2);
-}
+BigInt BigInt::one() { return uint64(1); }
+BigInt BigInt::two() { return uint64(2); }
 
 std::vector<uint8_t> BigInt::to_vectoruint8() const
 {
+    // Convert little‑endian limbs to big‑endian bytes
     std::vector<uint8_t> bytes;
 
-    for (int i = this->used - 1; i >= 0; i--) {
-        uint64_t limb = this->limbs[i];
+    for (int i = used - 1; i >= 0; i--) {
+        uint64_t limb = limbs[i];
 
+        // Emit 8 bytes per limb
         for (int j = 7; j >= 0; j--) {
             bytes.push_back((limb >> (j * 8)) & 0xFF);
         }
@@ -74,23 +73,24 @@ std::vector<uint8_t> BigInt::to_vectoruint8() const
 
 bool BigInt::isOdd() const
 {
+    // Odd if LSB of limb[0] is 1
     if (used == 0)
         return false;
-
     return limbs[0] & 1;
 }
 
 bool BigInt::isZero() const
 {
+    // Check all used limbs
     for (size_t i = 0; i < used; i++)
         if (limbs[i] != 0)
             return false;
-
     return true;
 }
 
 void BigInt::normalize()
 {
+    // Remove trailing zero limbs
     while (used > 0 && limbs[used - 1] == 0)
         used--;
 }
@@ -102,8 +102,8 @@ size_t BigInt::bit_length() const
 
     uint64_t last = limbs[used - 1];
 
+    // Find highest set bit in most significant limb
     unsigned long index;
-
     _BitScanReverse64(&index, last);
 
     return (used - 1) * 64 + index + 1;
@@ -114,11 +114,10 @@ bool BigInt::operator==(const BigInt& other) const
     if (used != other.used)
         return false;
 
+    // Compare limb by limb
     for (size_t i = 0; i < used; i++)
-    {
         if (limbs[i] != other.limbs[i])
             return false;
-    }
 
     return true;
 }
@@ -130,14 +129,14 @@ bool BigInt::operator!=(const BigInt& other) const
 
 bool BigInt::operator<(const BigInt& other) const
 {
+    // Compare by length first
     if (used != other.used)
         return used < other.used;
 
+    // Compare from most significant limb
     for (int i = used - 1; i >= 0; i--)
-    {
         if (limbs[i] != other.limbs[i])
             return limbs[i] < other.limbs[i];
-    }
 
     return false;
 }
@@ -149,9 +148,9 @@ bool BigInt::operator>(const BigInt& other) const
 
 BigInt BigInt::operator+(const BigInt& other) const
 {
+    // Classic limb‑wise addition with carry
     const size_t max_size = std::max(used, other.used);
-
-    BigInt result(max_size*64);
+    BigInt result(max_size * 64);
 
     uint64_t carry = 0;
 
@@ -161,13 +160,10 @@ BigInt BigInt::operator+(const BigInt& other) const
         uint64_t b = (i < other.used) ? other.limbs[i] : 0;
 
         uint64_t sum = a + b + carry;
-
         result.limbs[i] = sum;
 
-        if (sum < a || (carry && sum == a))
-            carry = 1;
-        else
-            carry = 0;
+        // Detect carry using unsigned overflow rules
+        carry = (sum < a || (carry && sum == a));
     }
 
     if (carry) {
@@ -176,18 +172,17 @@ BigInt BigInt::operator+(const BigInt& other) const
     }
 
     result.normalize();
-
     return result;
 }
 
 BigInt BigInt::operator-(const BigInt& other) const
 {
+    // Simple subtraction with borrow
     if (*this < other)
         throw std::exception("First operand must be bigger than the second");
 
     size_t max_size = used;
-
-    BigInt result(max_size*64);
+    BigInt result(max_size * 64);
 
     uint64_t borrow = 0;
 
@@ -198,6 +193,7 @@ BigInt BigInt::operator-(const BigInt& other) const
 
         uint64_t sub;
 
+        // Borrow logic using unsigned wraparound
         if (a >= b + borrow && !(borrow && b == UINT64_MAX))
         {
             sub = a - b - borrow;
@@ -213,16 +209,16 @@ BigInt BigInt::operator-(const BigInt& other) const
     }
 
     result.normalize();
-
     return result;
 }
 
 BigInt BigInt::operator*(const BigInt& other) const
 {
+    // Schoolbook multiplication using 128‑bit intermediate products
     size_t n = used;
     size_t m = other.used;
 
-    BigInt result((n+m)*64);
+    BigInt result((n + m) * 64);
 
     for (size_t i = 0; i < n; i++)
     {
@@ -235,6 +231,7 @@ BigInt BigInt::operator*(const BigInt& other) const
 
             uint64_t temp = result.limbs[i + j];
 
+            // Add low + carry + existing limb
             uint64_t sum = temp + low;
             uint64_t carry1 = (sum < temp);
 
@@ -250,18 +247,18 @@ BigInt BigInt::operator*(const BigInt& other) const
     }
 
     result.normalize();
-
     return result;
 }
 
 BigInt BigInt::operator<<(size_t shift) const
 {
+    // Logical left shift by arbitrary number of bits
     if (shift == 0) return *this;
 
     size_t limb_shift = shift / 64;
     size_t bit_shift = shift % 64;
 
-    BigInt result((used + limb_shift + 1)*64);
+    BigInt result((used + limb_shift + 1) * 64);
 
     uint64_t carry = 0;
 
@@ -274,9 +271,7 @@ BigInt BigInt::operator<<(size_t shift) const
         if (bit_shift != 0)
         {
             result.limbs[i + limb_shift] |= carry;
-
             carry = value >> (64 - bit_shift);
-
             result.limbs[i + limb_shift + 1] |= carry;
         }
     }
@@ -287,6 +282,7 @@ BigInt BigInt::operator<<(size_t shift) const
 
 BigInt BigInt::operator>>(size_t shift) const
 {
+    // Logical right shift by arbitrary number of bits
     if (shift == 0) return *this;
 
     size_t limb_shift = shift / 64;
@@ -308,17 +304,17 @@ BigInt BigInt::operator>>(size_t shift) const
         if (bit_shift != 0)
         {
             result.limbs[i - limb_shift] |= carry;
-
             carry = value << (64 - bit_shift);
         }
     }
 
     result.normalize();
     return result;
-}   
+}
 
 BigInt BigInt::operator%(const BigInt& mod) const
 {
+    // Naive long division modulo (slow but correct)
     if (mod.isZero())
         throw std::runtime_error("Modulo by zero");
 
@@ -338,12 +334,12 @@ BigInt BigInt::operator%(const BigInt& mod) const
     }
 
     remainder.normalize();
-
     return remainder;
 }
 
 BigInt BigInt::operator/(const BigInt& div) const
 {
+    // Naive long division (slow but correct)
     if (div.isZero())
         throw std::runtime_error("Division by zero");
 
@@ -361,7 +357,7 @@ BigInt BigInt::operator/(const BigInt& div) const
 
         if (!(remainder < divisor)) {
             remainder = remainder - divisor;
-                    
+
             size_t limb = i / 64;
             size_t bit = i % 64;
 
@@ -373,12 +369,12 @@ BigInt BigInt::operator/(const BigInt& div) const
     }
 
     quotient.normalize();
-
     return quotient;
 }
 
 BigInt BigInt::operator-(uint64_t v) const
 {
+    // Subtract small integer
     BigInt result = *this;
 
     uint64_t borrow = v;
@@ -395,26 +391,23 @@ BigInt BigInt::operator-(uint64_t v) const
         throw std::runtime_error("BigInt underflow");
 
     result.normalize();
-
     return result;
-}	
+}
 
 std::string BigInt::to_hex(bool remove_leading_zeros) const
 {
+    // Emit limbs in big‑endian hex
     std::ostringstream oss;
 
-    for (int i = this->used - 1; i >= 0; i--) {
-        oss << std::hex << std::setw(16) << std::setfill('0') << this->limbs[i];
+    for (int i = used - 1; i >= 0; i--) {
+        oss << std::hex << std::setw(16) << std::setfill('0') << limbs[i];
     }
 
     std::string hex = oss.str();
 
     if (remove_leading_zeros) {
-        size_t pos = oss.str().find_first_not_of('0');
-        if (pos != std::string::npos)
-            hex = oss.str().substr(pos);
-        else
-            hex = "0";
+        size_t pos = hex.find_first_not_of('0');
+        hex = (pos != std::string::npos) ? hex.substr(pos) : "0";
     }
 
     return hex;
