@@ -352,7 +352,7 @@ ECDSASignature ecdsa_sign(const std::string& message,
         BigInt r_R     = montgomery_reduce(r     * Curve::n_R2(), Curve::n, Curve::nc_inv());
         BigInt d_R     = montgomery_reduce(key_priv_mod * Curve::n_R2(), Curve::n, Curve::nc_inv());
 
-        // Compute s = k^{-1}(z + r d) mod n  (in Montgomery domain)
+        // Compute s = k^{-1}(z + r d) mod n  (in Montgomery domain
         BigInt rd_R = montgomery_reduce(r_R * d_R, Curve::n, Curve::nc_inv());
         BigInt s_R  = montgomery_reduce(k_inv_R * (z_R + rd_R), Curve::n, Curve::nc_inv());
 
