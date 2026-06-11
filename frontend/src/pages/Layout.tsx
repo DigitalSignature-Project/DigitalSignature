@@ -120,17 +120,17 @@ const Layout = () => {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-8 z-0 relative">
-          {isProfileMenuOpen && (
-            <div 
-              className="absolute inset-0 z-10" 
-              onClick={() => setIsProfileMenuOpen(false)}
-            />
-          )}
-          <div className="relative z-20">
-            <Outlet />
-          </div>
-        </main>
+      <main className="flex-1 w-full overflow-y-auto p-8 z-0 relative">
+        {isProfileMenuOpen && (
+          <div 
+            className="absolute inset-0 z-10" 
+            onClick={() => setIsProfileMenuOpen(false)}
+          />
+        )}
+        <div className="relative z-20 w-full h-full">
+          <Outlet />
+        </div>
+      </main>
       </div>
     </div>
   );

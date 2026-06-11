@@ -218,14 +218,14 @@ const EncryptPage = () => {
   const formatBytes = (bytes: number) =>
     (bytes / (1024 * 1024)).toFixed(2) + " MB";
 
-  return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <p className="font-bold text-[#0f172a] text-4xl text-center mt-2">
-        Encrypt and Sign Your Files
-      </p>
-      <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center min-h-[400px]">
-        <input
-          type="file"
+return (
+  <div className="w-full max-w-4xl mx-auto space-y-8">
+    <p className="font-bold text-[#0f172a] text-4xl text-center mt-2">
+      Encrypt and Sign Your Files
+    </p>
+    <div className="w-full bg-white p-12 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center min-h-[400px]">
+      <input
+        type="file"
           ref={fileInputRef}
           onChange={handleFileChange}
           className="hidden"
@@ -278,7 +278,7 @@ const EncryptPage = () => {
 
         {selectedFile && !isSigned && (
           <div className="mt-12 w-full max-w-2xl flex flex-col items-center border-t border-slate-100 pt-8 gap-4 animate-in fade-in slide-in-from-bottom-2">
-            <div className="space-y-4 w-full max-w-md">
+            <div className="space-y-4 w-full max-w-2xl">
               <div className="flex flex-col space-y-1">
                 <label className="text-xs font-semibold text-slate-500 uppercase">
                   Algorithm
@@ -286,9 +286,9 @@ const EncryptPage = () => {
                 <select
                   value={algorithm}
                   onChange={(e) => setAlgorithm(e.target.value)}
-                  className="p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
+                  className="w-full p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
                 >
-                  <option value="RSA">RSA</option>
+                  <option value="RSA">RSA-PSS</option>
                   <option value="ElGamal">ElGamal</option>
                   <option value="ECDSA">ECDSA</option>
                 </select>
@@ -311,7 +311,7 @@ const EncryptPage = () => {
                           setSaltLength(value);
                         }
                       }}
-                      className="p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
+                      className="w-full p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
                     />
                   </div>
 
@@ -322,7 +322,7 @@ const EncryptPage = () => {
                     <select
                       value={hash_function_1}
                       onChange={(e) => setHash_function_1(e.target.value)}
-                      className="p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
+                      className="w-full p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
                     >
                       <option value="SHA256">SHA256</option>
                       <option value="SHA3_256">SHA3_256</option>
@@ -337,7 +337,7 @@ const EncryptPage = () => {
                     <select
                       value={hash_function_2}
                       onChange={(e) => setHash_function_2(e.target.value)}
-                      className="p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
+                      className="w-full p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
                     >
                       <option value="SHA256">SHA256</option>
                       <option value="SHA3_256">SHA3_256</option>
@@ -355,7 +355,7 @@ const EncryptPage = () => {
                   <select
                     value={hash_function_1}
                     onChange={(e) => setHash_function_1(e.target.value)}
-                    className="p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
+                    className="w-full p-2.5 border border-slate-200 rounded-lg text-slate-700 bg-slate-50 outline-none focus:border-[#0f172a] transition-colors"
                   >
                     <option value="SHA256">SHA256</option>
                     <option value="SHA3_256">SHA3_256</option>
@@ -376,7 +376,7 @@ const EncryptPage = () => {
       {!isSigned ? (
         <TempResultSection data={calculated} />
       ) : (
-        <div className="w-full flex flex-col items-center justify-center p-8 bg-green-50 border border-green-200 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-4">
+        <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center p-8 bg-green-50 border border-green-200 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-4">
           <p className="text-2xl font-bold text-green-800 mb-2">
             File Signed Successfully! 🎉
           </p>
