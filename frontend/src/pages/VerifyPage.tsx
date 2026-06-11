@@ -29,6 +29,7 @@ type VerifyFileResponse = {
   isValid: boolean;
   signer: string;
   date: string;
+  localDate?: string;
 };
 
 const VerifyPage = () => {
@@ -123,6 +124,7 @@ const VerifyPage = () => {
         isValid,
         signer: login,
         date: signatureInfo.timestamp,
+        localDate: signatureInfo.local_timestamp,
       });
     } catch (error) {
       console.error("Błąd podczas weryfikacji:", error);
@@ -242,8 +244,14 @@ const VerifyPage = () => {
                   Signed by: <span className="font-bold">{result.signer}</span>
                 </span>
                 <span className="text-[#0f172a] font-medium text-lg">
-                  Date of signature:{" "}
+                  System date (UTC):{" "}
                   <span className="font-bold">{result.date}</span>
+                </span>
+                <span className="text-[#0f172a] font-medium text-lg text-cyan-800">
+                  Local date:{" "}
+                  <span className="font-bold">
+                    {result.localDate ? result.localDate : new Date(result.date).toLocaleString()}
+                  </span>
                 </span>
               </div>
             </div>
