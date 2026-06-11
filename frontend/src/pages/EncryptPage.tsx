@@ -175,7 +175,11 @@ const EncryptPage = () => {
           {
             name: "SecureSign Archive",
             extensions: ["ss"],
-          }
+          },
+          {
+            name: "Zip Archive",
+            extensions: ["zip"],
+          },
         ],
       });
 
@@ -184,7 +188,7 @@ const EncryptPage = () => {
         console.log("File successfully saved to:", filePath);
       }
     } catch (error) {
-      console.error("Error saving SS file:", error);
+      console.error("Error saving file:", error);
     }
   };
 
@@ -238,7 +242,7 @@ const EncryptPage = () => {
             <p className="text-center text-sm text-slate-500">
               Click to choose
               <br />
-              <span className="font-bold text-[#0f172a]">SS FILE</span>
+              <span className="font-bold text-[#0f172a]">FILE</span>
             </p>
           </div>
         ) : (
@@ -299,11 +303,11 @@ const EncryptPage = () => {
                     <input
                       type="number"
                       min="1"
-                      max="256"
+                      max="128"
                       value={saltLength}
                       onChange={(e) => {
                         const value = Number(e.target.value);
-                        if (value >= 1 && value <= 256) {
+                        if (value >= 1 && value <= 128) {
                           setSaltLength(value);
                         }
                       }}
@@ -384,7 +388,7 @@ const EncryptPage = () => {
             className="flex items-center cursor-pointer space-x-2 bg-[#0f172a] hover:bg-slate-800 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-sm"
           >
             <Download className="w-5 h-5" />
-            <span>Download SS package</span>
+            <span>Download package</span>
           </button>
         </div>
       )}

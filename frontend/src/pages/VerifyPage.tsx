@@ -173,7 +173,7 @@ const VerifyPage = () => {
           type="file"
           ref={fileInputRef}
           onChange={handleFileChange}
-          accept=".ss"
+          accept=".ss,.zip"
           className="hidden"
         />
 
@@ -188,7 +188,7 @@ const VerifyPage = () => {
             <p className="text-center text-sm text-slate-500">
               Click to choose
               <br />
-              <span className="font-bold text-[#0f172a]">SS FILE</span>
+              <span className="font-bold text-[#0f172a]">FILE</span>
             </p>
           </div>
         ) : (
