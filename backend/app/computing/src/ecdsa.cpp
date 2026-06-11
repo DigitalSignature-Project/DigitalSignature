@@ -316,6 +316,8 @@ ECDSASignature ecdsa_sign(const std::string& message,
 {
     RandomGenerator rng;
 
+    const BigInt key_priv_mod = key_priv % Curve::n; // Reduce private key to modulus curve n 
+
     // Hash message → z
     std::vector<uint8_t> messageBytes(message.begin(), message.end());
     std::vector<uint8_t> hashedMessage = hash_function(messageBytes);
@@ -348,7 +350,7 @@ ECDSASignature ecdsa_sign(const std::string& message,
         // Convert to Montgomery domain
         BigInt k_inv_R = montgomery_reduce(k_inv * Curve::n_R2(), Curve::n, Curve::nc_inv());
         BigInt r_R     = montgomery_reduce(r     * Curve::n_R2(), Curve::n, Curve::nc_inv());
-        BigInt d_R     = montgomery_reduce(key_priv * Curve::n_R2(), Curve::n, Curve::nc_inv());
+        BigInt d_R     = montgomery_reduce(key_priv_mod * Curve::n_R2(), Curve::n, Curve::nc_inv());
 
         // Compute s = k^{-1}(z + r d) mod n  (in Montgomery domain)
         BigInt rd_R = montgomery_reduce(r_R * d_R, Curve::n, Curve::nc_inv());
