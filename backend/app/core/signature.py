@@ -40,7 +40,7 @@ def _convert_parameters(
 async def _fetch_user_keys(login: str) -> dict:
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            f"https://digital-signature-auth.digitalsignature-auth.workers.dev/api/public-key/{login}",
+            f"https://digital-signature-auth.digitalsignature-auth.workers.dev/api/public-keys/{login}",
             headers={"Content-Type": "application/json"},
         )
 
@@ -67,17 +67,17 @@ async def _fetch_user_keys(login: str) -> dict:
 async def generate_elgamal_data() -> dict:
     key_pub = DigiSign.ElGamal.ElGamalPublicKey()
     key_priv = DigiSign.BigInt()
-    
+
     DigiSign.ElGamal.ElGamal_generate_keys_parallel(key_pub, key_priv, 2048, 256, 4)
-    
+
     result: dict = {
         "p_hex": key_pub.p.to_hex(),
         "q_hex": key_pub.q.to_hex(),
         "g_hex": key_pub.g.to_hex(),
         "y_hex": key_pub.y.to_hex(),
-        "key_priv_hex": key_priv.to_hex()
+        "key_priv_hex": key_priv.to_hex(),
     }
-    
+
     return result
 
 
@@ -90,9 +90,9 @@ async def generate_ecdsa_data() -> dict:
     result: dict = {
         "x_hex": key_pub.x.to_hex(),
         "y_hex": key_pub.y.to_hex(),
-        "key_priv_hex": key_priv.to_hex()        
+        "key_priv_hex": key_priv.to_hex(),
     }
-    
+
     return result
 
 
@@ -156,7 +156,9 @@ async def verify_rsa_signature(
     return result
 
 
-async def create_elgamal_signature(file_content: str, login: str, hash: str) -> str:
+async def create_elgamal_signature(
+    file_content: str, login: str, hash: str, password: str
+) -> str:
     match hash:
         case "SHA256":
             hash_1 = DigiSign.HASH.SHA256
@@ -166,34 +168,41 @@ async def create_elgamal_signature(file_content: str, login: str, hash: str) -> 
             hash_1 = DigiSign.HASH.SHA3_512
         case _:
             raise ValueError("Unsupported hash function")
-    
+
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"https://digital-signature-auth.digitalsignature-auth.workers.dev/api/public-keys/{login}",
             headers={"Content-Type": "application/json"},
         )
-        
+
     data = response.json()
-        
+
     p = data["elgamal_keys"][0]["p_value"]
     q = data["elgamal_keys"][0]["q_value"]
     g = data["elgamal_keys"][0]["g_value"]
     y = data["elgamal_keys"][0]["y_value"]
-    private_key = data["elgamal_keys"][0]["encrypted_private_key"]
-    
+    encrypted_private_key = data["elgamal_keys"][0]["encrypted_private_key"]
+
+    try:
+        private_key = decrypt(encrypted_private_key, password)
+    except InvalidTag:
+        raise HTTPException(status_code=401, detail="Invalid key passphrase")
+
     p = DigiSign.BigInt.from_hex(p)
     q = DigiSign.BigInt.from_hex(q)
     g = DigiSign.BigInt.from_hex(g)
     y = DigiSign.BigInt.from_hex(y)
-    
+
     public_key = DigiSign.ElGamal.ElGamalPublicKey(p, q, g, y)
     private_key = DigiSign.BigInt.from_hex(private_key)
     signature = DigiSign.ElGamal.sign(file_content, public_key, private_key, hash_1)
     signature = DigiSign.ElGamal.DER_encode_signature_hex(signature)
     return signature
-    
 
-async def verify_elgamal_sign(file_content: str, signature: str, login: str, hash: str) -> bool:
+
+async def verify_elgamal_sign(
+    file_content: str, signature: str, login: str, hash: str
+) -> bool:
     match hash:
         case "SHA256":
             hash_1 = DigiSign.HASH.SHA256
@@ -203,27 +212,94 @@ async def verify_elgamal_sign(file_content: str, signature: str, login: str, has
             hash_1 = DigiSign.HASH.SHA3_512
         case _:
             raise ValueError("Unsupported hash function")
-        
+
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"https://digital-signature-auth.digitalsignature-auth.workers.dev/api/public-keys/{login}",
             headers={"Content-Type": "application/json"},
         )
-    
+
     data = response.json()
-    
+
     p = data["elgamal_keys"][0]["p_value"]
     q = data["elgamal_keys"][0]["q_value"]
     g = data["elgamal_keys"][0]["g_value"]
     y = data["elgamal_keys"][0]["y_value"]
-    
+
     p = DigiSign.BigInt.from_hex(p)
     q = DigiSign.BigInt.from_hex(q)
     g = DigiSign.BigInt.from_hex(g)
     y = DigiSign.BigInt.from_hex(y)
-    
+
     public_key = DigiSign.ElGamal.ElGamalPublicKey(p, q, g, y)
-        
+
     sign_class = DigiSign.ElGamal.DER_decode_signature(signature)
     result = DigiSign.ElGamal.verify(file_content, public_key, sign_class, hash_1)
+    return result
+
+
+async def create_escda_signature(
+    file_content: str, login: str, password: str, hash: str
+) -> str:
+    match hash:
+        case "SHA256":
+            hash_1 = DigiSign.HASH.SHA256
+        case "SHA3_256":
+            hash_1 = DigiSign.HASH.SHA3_256
+        case "SHA3_512":
+            hash_1 = DigiSign.HASH.SHA3_512
+        case _:
+            raise ValueError("Unsupported hash function")
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"https://digital-signature-auth.digitalsignature-auth.workers.dev/api/public-keys/{login}",
+            headers={"Content-Type": "application/json"},
+        )
+
+    data = response.json()
+
+    encrypted_private_key = data["ecdsa_keys"][0]["encrypted_private_key"]
+
+    try:
+        private_key = decrypt(encrypted_private_key, password)
+    except InvalidTag:
+        raise HTTPException(status_code=401, detail="Invalid key passphrase")
+
+    private_key = DigiSign.BigInt.from_hex(private_key)
+    signature = DigiSign.ECDSA.sign(file_content, private_key, hash_1)
+    signature = DigiSign.ECDSA.DER_encode_signature_hex(signature)
+    return signature
+
+
+async def verify_escda_sign(
+    file_content: str, signature: str, login: str, hash: str
+) -> bool:
+    match hash:
+        case "SHA256":
+            hash_1 = DigiSign.HASH.SHA256
+        case "SHA3_256":
+            hash_1 = DigiSign.HASH.SHA3_256
+        case "SHA3_512":
+            hash_1 = DigiSign.HASH.SHA3_512
+        case _:
+            raise ValueError("Unsupported hash function")
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"https://digital-signature-auth.digitalsignature-auth.workers.dev/api/public-keys/{login}",
+            headers={"Content-Type": "application/json"},
+        )
+
+    data = response.json()
+
+    x_value = data["ecdsa_keys"][0]["x_value"]
+    y_value = data["ecdsa_keys"][0]["y_value"]
+
+    x_value = DigiSign.BigInt.from_hex(x_value)
+    y_value = DigiSign.BigInt.from_hex(y_value)
+
+    sign_class = DigiSign.ECDSA.DER_decode_signature(signature)
+    public_key = DigiSign.ECDSA.PublicKey(x_value, y_value)
+    result = DigiSign.ECDSA.verify(file_content, public_key, sign_class, hash_1)
     return result

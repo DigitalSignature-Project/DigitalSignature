@@ -51,3 +51,27 @@ class VerifyElgamalSignature(BaseModel):
     signature: str
     login: str
     hash: str
+
+
+class EcdsaSignature(BaseModel):
+    file_content: str
+    login: str
+    password: str
+    encrypted_private_key: str
+    key_module: str
+    hash: str
+
+
+class EcdsaSignatureResponse(BaseModel):
+    signature: str
+
+
+class VerifyEcdsaSignature(BaseModel):
+    file_content: str
+    signature: str
+    login: str
+    hash: str
+
+
+class VerifyEcdsaSignatureResponse(BaseModel):
+    is_valid: bool

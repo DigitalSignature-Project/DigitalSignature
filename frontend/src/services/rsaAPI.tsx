@@ -104,9 +104,9 @@ export const signInEcdsaFile = async (
   file_content: string,
   login: string,
   password: string,
-  encrypted_private_key?: string,
-  key_module?: string,
-  hash?: string,
+  encrypted_private_key: string,
+  key_module: string,
+  hash: string,
 ) => {
   const { data } = await axios.post<SignInFileRsaResponse>(
     "http://127.0.0.1:2138/signature/generate_ecdsa_signature",
