@@ -303,11 +303,11 @@ const EncryptPage = () => {
                     <input
                       type="number"
                       min="1"
-                      max="128"
+                      max="180"
                       value={saltLength}
                       onChange={(e) => {
                         const value = Number(e.target.value);
-                        if (value >= 1 && value <= 128) {
+                        if (value >= 1 && value <= 180) {
                           setSaltLength(value);
                         }
                       }}
