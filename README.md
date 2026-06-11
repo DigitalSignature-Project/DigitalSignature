@@ -4,7 +4,10 @@ Application for creating a digital signature
 
 # Table of content
 
-- [Project set up for developers](#set-up-for-developers)
+- [Project setup for developers](#set-up-for-developers)
+- [Alternative setup for developers](#alternative-setup-for-developers)
+- [Manual](#manual)
+- [Application apperance](#application-apperance)
 
 # Set up for developers
 
@@ -25,7 +28,8 @@ Application for creating a digital signature
 8. Install all dependencies for application backend. For more details check this manual: [Backend manual](backend/README.md)
 
 # Alternative setup for developers
-# After completing the first 6 steps in the instructions above.
+
+### After completing the first 6 steps in the instructions above.
 
 1. Install requests module for python: `pip install requests`
 
@@ -35,3 +39,90 @@ Application for creating a digital signature
 - `python manage.py build` - this command installs the developer version of the application.
 - `python manage.py run` - this command launch application.
 - `python manage.py prod` - this command builds utility applications
+
+# Used technologies
+
+1. Programing languages, server, database and main libraries:
+
+- Backend:
+  - Python 3.12 (FastApi)
+  - C++ 20 (Cryptography)
+
+- Frontend:
+  - React.js (Axios)
+  - TypeScript
+  - Tailwind CSS
+
+- Server:
+  - Serverless Architecture
+
+- Database:
+  - Cloudflare D1 (SQLite)
+  - Cloudflare Workers
+
+# Manual
+
+1. Install application using msi installer.
+2. If you don't have account, create one by clicking on `Create account`.
+3. Create a username and password for your account.
+4. Create the key necessary to secure your private key generated automatically by the application
+5. Log in to the user account you created earlier.
+6. To create a digital signature for your file, go to the `Encrypt and Sign` tab.
+7. Select the signature algorithm you are interested in from the list of available ones.
+8. Sign the file by clicking the `Encrypt and Sign` button.
+9. To verify the digital signature, go to the `Verify Signature` tab.
+10. Select the file you want to verify and click the `Verify Signature` button.
+
+# Application apperance
+
+1. Application welcome window.
+
+![Welcome app](/sample_app_screens/welcome_page.png)
+
+2. Window for creating a new user account.
+
+![Create account](/sample_app_screens/create_account.png)
+
+3. Window for creating a password for the private key used to create digital signatures
+
+![Create signature password](/sample_app_screens/set_key_password.png)
+
+4. Password entry window for the private key
+
+![Signature password](/sample_app_screens/key_password.png)
+
+5. Application dashboard, the window that the user sees immediately after logging in.
+
+![Dashboard](/sample_app_screens/dashboard.png)
+
+6. Window for creating a digital signature, RSA system.
+
+![RSA](/sample_app_screens/rsa_signature.png)
+
+7. Window for creating a digital signature, ElGamal system.
+
+![ElGamal](/sample_app_screens/elgamal_signature.png)
+
+8. Window for creating a digital signature, ECDSA system.
+
+![ECDSA](/sample_app_screens/ecdsa_signature.png)
+
+9. Message window informing the user about a correctly created digital signature for the selected file.
+
+![MessageSign](/sample_app_screens/encrypt_page.png)
+
+10. Window for verifying the digital signature (1).
+
+![Verify1](/sample_app_screens/verify_page_1.png)
+
+11. Window for verifying the digital signature (2).
+
+![Verify2](/sample_app_screens/verify_page_2.png)
+
+12. Own encryption file extension.
+
+![OwnExt](/sample_app_screens/own_file_extension.png)
+
+13. Location to log out of the currently logged in user's account.
+
+![LogOut](/sample_app_screens/log_out.png)
