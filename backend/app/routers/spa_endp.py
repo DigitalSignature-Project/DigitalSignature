@@ -14,7 +14,7 @@ frontend_path = BASE_DIR.parents[3] / "frontend" / "dist"
 
 @router.get("/{full_path:path}")
 async def serve_spa(full_path: str, request: Request):
-    if full_path.startswith("api"):
+    if full_path.startswith(("api/", "server/", "signature/")):
         return {"detail": "Not Found"}
 
     file_path = frontend_path / full_path

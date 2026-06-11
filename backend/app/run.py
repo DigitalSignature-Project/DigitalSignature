@@ -9,12 +9,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers import spa_endp as spa_router
 from app.routers import crypto_endp as crypto_router
 from app.routers import external_server_endp as server_router
+from app.routers import signature_endp as signature_router
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:2138",
+        "http://127.0.0.1:2138",
+        "tauri://localhost",
+        "http://tauri.localhost",
+        "https://tauri.localhost",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,8 +34,9 @@ if getattr(sys, "frozen", False):
 else:
     base_path = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
-app.mount("/static", StaticFiles(directory=str(base_path), html=True), name="frontend")
-
-app.include_router(spa_router.router)
 app.include_router(crypto_router.router, prefix="/api")
 app.include_router(server_router.router, prefix="/server")
+app.include_router(signature_router.router, prefix="/signature")
+app.include_router(spa_router.router)
+
+app.mount("/", StaticFiles(directory=str(base_path), html=True), name="frontend")

@@ -20,7 +20,6 @@ const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>("LOGIN");
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [rememberMe, setRememberMe] = useState<boolean>(false);
 
   useEffect(() => {
     const shrinkWindow = async () => {
@@ -58,14 +57,22 @@ const AuthPage: React.FC = () => {
     setViewMode(mode);
   };
 
-  const finalizeAuth = () => {
-    if (rememberMe) {
-      localStorage.setItem("isAuthenticated", "true");
-    } else {
+  const finalizeAuth = async () => {
+    const { login, keyPassphrase } = formData;
+
+    try {
       sessionStorage.setItem("isAuthenticated", "true");
+      sessionStorage.setItem("login", login);
+      sessionStorage.setItem("keyPassphrase", keyPassphrase);
+
       localStorage.removeItem("isAuthenticated");
+      localStorage.removeItem("login");
+
+      navigate("/", { state: { keyPassphrase } });
+    } catch (error) {
+      console.error("Błąd podczas zapisywania poświadczeń:", error);
+      setErrorMessage("Wystąpił błąd podczas zabezpieczania klucza lokalnie.");
     }
-    navigate("/");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -79,7 +86,12 @@ const AuthPage: React.FC = () => {
 
       const response = await verifyUserLogin(credentials);
 
-      if (response.success) {
+      if (response.success && response.data) {
+        sessionStorage.setItem(
+          "encryptedPrivateKey",
+          response.data.encrypted_private_key,
+        );
+        sessionStorage.setItem("keyModule", response.data.key_module);
         changeView("LOGIN_PASSPHRASE");
       } else {
         setErrorMessage("Login failed: Invalid credentials.");
@@ -88,18 +100,23 @@ const AuthPage: React.FC = () => {
     }
 
     if (viewMode === "LOGIN_PASSPHRASE") {
-      const credentials = {
-        login: formData.login,
-        password_hash: formData.password,
-        key: formData.keyPassphrase,
-      };
+      try {
+        const credentials = {
+          login: formData.login,
+          password_hash: formData.password,
+          key: formData.keyPassphrase,
+        };
 
-      const response = await checkUserKey(credentials);
+        const response = await checkUserKey(credentials);
 
-      if (response) {
-        finalizeAuth();
-      } else {
-        setErrorMessage("Invalid key passphrase.");
+        if (response === true) {
+          await finalizeAuth();
+        } else {
+          setErrorMessage("Invalid key passphrase.");
+        }
+      } catch (error) {
+        console.error("Error checking user key:", error);
+        setErrorMessage("Error verifying key passphrase. Please try again.");
       }
       return;
     }
@@ -116,7 +133,7 @@ const AuthPage: React.FC = () => {
 
       const credentials = {
         login: formData.login,
-        password_hash: formData.login,
+        password_hash: formData.password,
       };
 
       const response = await verifyUserLogin(credentials);
@@ -135,7 +152,7 @@ const AuthPage: React.FC = () => {
         return;
       }
 
-      const rsa_response = await calculateRsaParallel(1024, 4);
+      const rsa_response = await calculateRsaParallel(2048, 4);
 
       const credentials = {
         login: formData.login,
@@ -149,7 +166,20 @@ const AuthPage: React.FC = () => {
       const response = await registerNewUser(credentials);
 
       if (response) {
-        finalizeAuth();
+        const loginResponse = await verifyUserLogin({
+          login: formData.login,
+          password_hash: formData.password,
+        });
+
+        if (loginResponse.success && loginResponse.data) {
+          sessionStorage.setItem(
+            "encryptedPrivateKey",
+            loginResponse.data.encrypted_private_key,
+          );
+          sessionStorage.setItem("keyModule", loginResponse.data.key_module);
+        }
+
+        await finalizeAuth();
       } else {
         setErrorMessage("Server error during account creation.");
       }
@@ -220,22 +250,11 @@ const AuthPage: React.FC = () => {
                       onChange={handleChange}
                     />
                   </div>
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-4 h-4 rounded border-slate-300 text-[#1e40af] focus:ring-[#1e40af] bg-slate-50"
-                      />
-                      <span className="text-sm text-slate-500 font-medium">
-                        Remember me
-                      </span>
-                    </label>
+                  <div className="flex justify-end">
                     <button
                       type="button"
                       onClick={() => changeView("FORGOT_PASSWORD")}
-                      className="text-sm font-medium text-slate-400 hover:text-[#0f172a] transition-colors underline underline-offset-4"
+                      className="text-sm font-medium text-slate-400 hover:text-[#0f172a] transition-colors underline underline-offset-4 hidden"
                     >
                       Forgot password?
                     </button>
@@ -305,17 +324,7 @@ const AuthPage: React.FC = () => {
                     />
                   </div>
                   <div className="mt-2 flex items-center justify-start">
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-4 h-4 rounded border-slate-300 text-[#1e40af] focus:ring-[#1e40af] bg-slate-50"
-                      />
-                      <span className="text-sm text-slate-500 font-medium">
-                        Remember me
-                      </span>
-                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer"></label>
                   </div>
                 </>
               )}
@@ -386,7 +395,7 @@ const AuthPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => changeView("FORGOT_PASSWORD")}
-                  className="text-sm font-bold text-slate-400 hover:text-red-500 transition-colors"
+                  className="text-sm font-bold text-slate-400 hover:text-red-500 transition-colors hidden"
                 >
                   Reset private key
                 </button>

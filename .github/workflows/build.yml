@@ -1,0 +1,64 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.0'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+
+      - name: Setup VCPKG and Install C++ Libraries
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+          cd C:\vcpkg
+          .\bootstrap-vcpkg.bat
+          .\vcpkg install libffi:x64-windows openssl:x64-windows-static pybind11:x64-windows-static
+        shell: cmd
+
+      - name: Compile C++ Backend (Computing Module)
+        working-directory: ./backend/app/computing
+        run: |
+          cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static
+          cmake --build build
+        shell: cmd
+
+
+      - name: Install Python requests module
+        run: pip install requests
+
+      - name: Run manage.py setup
+        run: python manage.py setup
+
+      - name: Run manage.py prod
+        run: python manage.py prod
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            frontend/src-tauri/target/release/app.exe
+            frontend/src-tauri/target/release/backend.exe
+            frontend/src-tauri/target/release/bundle/msi/*.msi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

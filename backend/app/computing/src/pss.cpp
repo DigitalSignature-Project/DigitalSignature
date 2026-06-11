@@ -3,16 +3,25 @@
 #include <iostream>
 #include <openssl/rand.h>
 #include <digisign/rsa.h>
+#include <digisign/format.h>
 
 namespace digisign {
 
-
-PSSConfig::PSSConfig(int salt_length, std::function<std::vector<uint8_t>(const std::vector<uint8_t>&)> hash_function, std::function<std::vector<uint8_t>(const std::vector<uint8_t>&)> MGF1_hash) {
+// ------------------------------------------------------------
+// PSSConfig constructor
+// ------------------------------------------------------------
+PSSConfig::PSSConfig(int salt_length,
+                     std::function<std::vector<uint8_t>(const std::vector<uint8_t>&)> hash_function,
+                     std::function<std::vector<uint8_t>(const std::vector<uint8_t>&)> MGF1_hash)
+{
     this->salt_length = salt_length;
     this->hash_function = hash_function;
     this->MGF1_hash = MGF1_hash;
 }
 
+// ------------------------------------------------------------
+// XOR helper
+// ------------------------------------------------------------
 std::vector<uint8_t> xor_bytes(const std::vector<uint8_t>& a, const std::vector<uint8_t>& b) {
     std::vector<uint8_t> result(a.size());
 
@@ -23,23 +32,28 @@ std::vector<uint8_t> xor_bytes(const std::vector<uint8_t>& a, const std::vector<
     return result;
 }
 
+// ------------------------------------------------------------
+// Build DB = PS || 0x01 || salt
+// ------------------------------------------------------------
 std::vector<uint8_t> build_db(const std::vector<uint8_t>& salt, size_t emLen, size_t hashLen) {
     size_t dbLen = emLen - hashLen - 1;
-
     size_t psLen = dbLen - salt.size() - 1;
 
     std::vector<uint8_t> DB;
 
-    DB.insert(DB.end(), psLen, 0x00);
-
-    DB.push_back(0x01);
-
+    DB.insert(DB.end(), psLen, 0x00); // PS
+    DB.push_back(0x01);               // delimiter
     DB.insert(DB.end(), salt.begin(), salt.end());
 
     return DB;
 }
 
-std::vector<uint8_t> MGF1(const std::vector<uint8_t>& seed, size_t maskLen, std::function<std::vector<uint8_t>(const std::vector<uint8_t>&)> hash_function) {
+// ------------------------------------------------------------
+// MGF1 (RFC 8017)
+// ------------------------------------------------------------
+std::vector<uint8_t> MGF1(const std::vector<uint8_t>& seed, size_t maskLen,
+                          std::function<std::vector<uint8_t>(const std::vector<uint8_t>&)> hash_function)
+{
     const size_t hashLen = hash_function(seed).size();
 
     std::vector<uint8_t> mask;
@@ -48,27 +62,27 @@ std::vector<uint8_t> MGF1(const std::vector<uint8_t>& seed, size_t maskLen, std:
     size_t blocks = (maskLen + hashLen - 1) / hashLen;
 
     for (size_t i = 0; i < blocks; i++) {
-        std::vector<uint8_t> data;
-
-        data.insert(data.end(), seed.begin(), seed.end());
+        std::vector<uint8_t> data(seed);
 
         uint32_t counter = static_cast<uint32_t>(i);
 
+        // Append counter in big‑endian
         data.push_back((counter >> 24) & 0xFF);
         data.push_back((counter >> 16) & 0xFF);
         data.push_back((counter >> 8) & 0xFF);
         data.push_back(counter & 0xFF);
 
         auto h = hash_function(data);
-
         mask.insert(mask.end(), h.begin(), h.end());
     }
 
     mask.resize(maskLen);
-
     return mask;
 }
 
+// ------------------------------------------------------------
+// Apply emBits mask (RFC 8017 9.1.1 step 5)
+// ------------------------------------------------------------
 void apply_embit_mask(std::vector<uint8_t>& maskedDB, size_t emLen, const BigInt& n)
 {
     size_t emBits = n.bit_length() - 1;
@@ -86,19 +100,25 @@ void apply_embit_mask(std::vector<uint8_t>& maskedDB, size_t emLen, const BigInt
     }
 }
 
+// ------------------------------------------------------------
+// Build EM = maskedDB || H || 0xBC
+// ------------------------------------------------------------
 std::vector<uint8_t> build_em(const std::vector<uint8_t>& maskedDB, const std::vector<uint8_t>& H) {
     std::vector<uint8_t> EM;
 
     EM.insert(EM.end(), maskedDB.begin(), maskedDB.end());
-
     EM.insert(EM.end(), H.begin(), H.end());
-
     EM.push_back(0xBC);
 
     return EM;
 }
 
-std::vector<uint8_t> pss_encode(const std::string& message, size_t emLen, const BigInt& n, const PSSConfig& pss_config) {
+// ------------------------------------------------------------
+// EMSA‑PSS‑ENCODE
+// ------------------------------------------------------------
+std::vector<uint8_t> pss_encode(const std::string& message, size_t emLen,
+                                const BigInt& n, const PSSConfig& pss_config)
+{
     const size_t saltLen = pss_config.salt_length;
 
     std::vector<uint8_t> messageBytes(message.begin(), message.end());
@@ -110,36 +130,46 @@ std::vector<uint8_t> pss_encode(const std::string& message, size_t emLen, const 
         throw std::runtime_error("Encoded message length too short");
     }
 
+    // Generate random salt
     std::vector<uint8_t> salt(saltLen);
     if (RAND_bytes(salt.data(), saltLen) != 1) {
         throw std::runtime_error("CSPRNG failure");
     }
 
+    // M' = 0x00..00 (8 bytes) || mHash || salt
     std::vector<uint8_t> M_prime(8, 0x00);
-    M_prime.insert(M_prime.end(), mHash.begin(), mHash.end());  
+    M_prime.insert(M_prime.end(), mHash.begin(), mHash.end());
     M_prime.insert(M_prime.end(), salt.begin(), salt.end());
 
+    // H = Hash(M')
     auto H = pss_config.hash_function(M_prime);
 
+    // DB = PS || 0x01 || salt
     auto DB = build_db(salt, emLen, hashLen);
 
+    // dbMask = MGF1(H)
     auto dbMask = MGF1(H, DB.size(), pss_config.MGF1_hash);
 
+    // maskedDB = DB XOR dbMask
     auto maskedDB = xor_bytes(DB, dbMask);
 
+    // Apply emBits mask
     apply_embit_mask(maskedDB, emLen, n);
 
-    auto EM = build_em(maskedDB, H);
-
-    return EM;
+    // EM = maskedDB || H || 0xBC
+    return build_em(maskedDB, H);
 }
 
-bool pss_decode(const std::vector<uint8_t>& EM, const std::vector<uint8_t>& mHash, size_t emLen, const BigInt& n, const PSSConfig& pss_config) {
+// ------------------------------------------------------------
+// EMSA‑PSS‑VERIFY
+// ------------------------------------------------------------
+bool pss_decode(const std::vector<uint8_t>& EM, const std::vector<uint8_t>& mHash,
+                size_t emLen, const BigInt& n, const PSSConfig& pss_config)
+{
     const size_t hashLen = pss_config.hash_function(EM).size();
     const size_t saltLen = pss_config.salt_length;
 
     if (EM.size() != emLen) return false;
-
     if (EM.back() != 0xBC) return false;
 
     size_t hIndex = EM.size() - hashLen - 1;
@@ -156,6 +186,7 @@ bool pss_decode(const std::vector<uint8_t>& EM, const std::vector<uint8_t>& mHas
 
     size_t psEnd = DB.size() - saltLen - 1;
 
+    // Check PS = 0x00...00
     for (size_t i = 0; i < psEnd; i++) {
         if (DB[i] != 0x00) return false;
     }
@@ -164,10 +195,10 @@ bool pss_decode(const std::vector<uint8_t>& EM, const std::vector<uint8_t>& mHas
 
     std::vector<uint8_t> salt(DB.begin() + psEnd + 1, DB.end());
 
+    // Recompute H'
     std::vector<uint8_t> M_prime(8, 0x00);
-    auto mHashCheck = pss_config.hash_function(mHash);
 
-    M_prime.insert(M_prime.end(), mHashCheck.begin(), mHashCheck.end());
+    M_prime.insert(M_prime.end(), mHash.begin(), mHash.end());
     M_prime.insert(M_prime.end(), salt.begin(), salt.end());
 
     auto H_prime = pss_config.hash_function(M_prime);
@@ -175,10 +206,17 @@ bool pss_decode(const std::vector<uint8_t>& EM, const std::vector<uint8_t>& mHas
     return H == H_prime;
 }
 
-std::vector<uint8_t> digital_signature(const std::string& message, const BigInt& priv_key, const BigInt& n, const PSSConfig& pss_config) {
-    int bits = n.used * 64 / 8;
+// ------------------------------------------------------------
+// Sign: s = EMᵈ mod n
+// ------------------------------------------------------------
+std::vector<uint8_t> digital_signature(const std::string& message,
+                                       const BigInt& priv_key, const BigInt& n,
+                                       const PSSConfig& pss_config)
+{
+    size_t emBits = n.bit_length() - 1;
+    size_t emLen = (emBits + 7) / 8;
 
-    std::vector<uint8_t> pss = pss_encode(message, bits, n, pss_config);
+    std::vector<uint8_t> pss = pss_encode(message, emLen, n, pss_config);
 
     BigInt bipss = BigInt::vectoruint8(pss);
 
@@ -187,7 +225,12 @@ std::vector<uint8_t> digital_signature(const std::string& message, const BigInt&
     return bisign.to_vectoruint8();
 }
 
-bool verify(const std::string& message, const std::vector<uint8_t>& signature, const BigInt& e, const BigInt& n, const PSSConfig& pss_config) {
+// ------------------------------------------------------------
+// Verify RSA‑PSS signature
+// ------------------------------------------------------------
+bool verify(const std::string& message, const std::vector<uint8_t>& signature,
+            const BigInt& e, const BigInt& n, const PSSConfig& pss_config)
+{
     const size_t emBits = n.bit_length() - 1;
     const size_t emLen = (emBits + 7) / 8;
 
@@ -197,10 +240,12 @@ bool verify(const std::string& message, const std::vector<uint8_t>& signature, c
 
     BigInt s = BigInt::vectoruint8(signature);
 
+    // m = sᵉ mod n
     BigInt m = decrypt(s, e, n);
 
     std::vector<uint8_t> EM = m.to_vectoruint8();
 
+    // Left‑pad EM if needed
     if (EM.size() < emLen) {
         std::vector<uint8_t> padded(emLen - EM.size(), 0x00);
         padded.insert(padded.end(), EM.begin(), EM.end());
@@ -211,9 +256,16 @@ bool verify(const std::string& message, const std::vector<uint8_t>& signature, c
         return false;
     }
 
-    std::vector<uint8_t> mHash(message.begin(), message.end());
+    std::vector<uint8_t> messageBytes(message.begin(), message.end());
+    auto mHash = pss_config.hash_function(messageBytes);
 
     return pss_decode(EM, mHash, emLen, n, pss_config);
+}
+
+bool verify(const std::string& message, const std::string& hex_signature,
+            const BigInt& e, const BigInt& n, const PSSConfig& pss_config)
+{
+    return verify(message, hex_to_bytes(hex_signature), e, n, pss_config);
 }
 
 }
