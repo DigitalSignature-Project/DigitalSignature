@@ -6,8 +6,12 @@ from app.schemas.signature_schemas import (
     RsaSignature,
     VerifyRsaSignature,
     VerifyRsaSignatureResponse,
+    ElgamalSignatureResponse,
+    ElgamalSignature,
+    VerifyElgamalSignatureResponse,
+    VerifyElgamalSignature
 )
-from app.core.signature import create_rsa_signature, verify_rsa_signature
+from app.core.signature import create_rsa_signature, verify_rsa_signature, create_elgamal_signature, verify_elgamal_sign
 
 router = APIRouter(dependencies=[Depends(verify_token)])
 
@@ -38,3 +42,24 @@ async def verify_rsa_sign(data: VerifyRsaSignature) -> VerifyRsaSignatureRespons
         data.hash_function_2,
     )
     return VerifyRsaSignatureResponse(is_valid=result)
+
+
+@router.post("/generate_elgamal_signature", response_model=ElgamalSignatureResponse)
+async def generate_elgamal_signature(data: ElgamalSignature) -> ElgamalSignatureResponse:
+    signature = await create_elgamal_signature(
+        data.file_content,
+        data.login,
+        data.hash
+    )
+    return ElgamalSignatureResponse(signature=signature)
+
+
+@router.post("/verify_elgamal_signature", response_model=VerifyElgamalSignatureResponse)
+async def verify_elgamal_signature(data: VerifyElgamalSignature) -> VerifyElgamalSignatureResponse:
+    result = await verify_elgamal_sign(
+        data.file_content,
+        data.signature,
+        data.login,
+        data.hash
+    )
+    return VerifyElgamalSignatureResponse(is_valid=result)

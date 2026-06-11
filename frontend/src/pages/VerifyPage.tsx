@@ -101,7 +101,7 @@ const VerifyPage = () => {
           file_content,
           signature,
           login,
-          options.hashFunction,
+          options.hash_function_1,
         );
         isValid = result.is_valid;
       } else if (algorithm === "ECDSA") {

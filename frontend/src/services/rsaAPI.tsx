@@ -184,7 +184,7 @@ export const verifyEcdsaSignature = async (
   file_content: string,
   signature: string,
   login: string,
-  hash?: string,
+  hash: string,
 ) => {
   const { data } = await axios.post<VerifyRsaSignatureResponse>(
     "http://127.0.0.1:2138/signature/verify_ecdsa_signature",
