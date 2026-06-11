@@ -73,56 +73,82 @@ Application for creating a digital signature
 9. To verify the digital signature, go to the `Verify Signature` tab.
 10. Select the file you want to verify and click the `Verify Signature` button.
 
-# Application apperance
+# Application appearance
 
-1. Application welcome window.
+### 1. Application welcome window.
 
-![Welcome app](/sample_app_screens/welcome_page.png)
+<p align="center">
+  <img src="sample_app_screens/welcome_page.png" alt="Welcome app" />
+</p>
 
-2. Window for creating a new user account.
+### 2. Window for creating a new user account.
 
-![Create account](/sample_app_screens/create_account.png)
+<p align="center">
+  <img src="sample_app_screens/create_account.png" alt="Create account" />
+</p>
 
-3. Window for creating a password for the private key used to create digital signatures
+### 3. Window for creating a password for the private key used to create digital signatures
 
-![Create signature password](/sample_app_screens/set_key_password.png)
+<p align="center">
+  <img src="sample_app_screens/set_key_password.png" alt="Create signature password" />
+</p>
 
-4. Password entry window for the private key
+### 4. Password entry window for the private key
 
-![Signature password](/sample_app_screens/key_password.png)
+<p align="center">
+  <img src="sample_app_screens/key_password.png" alt="Signature password" />
+</p>
 
-5. Application dashboard, the window that the user sees immediately after logging in.
+### 5. Application dashboard, the window that the user sees immediately after logging in.
 
-![Dashboard](/sample_app_screens/dashboard.png)
+<p align="center">
+  <img src="sample_app_screens/dashboard.png" alt="Dashboard" />
+</p>
 
-6. Window for creating a digital signature, RSA system.
+### 6. Window for creating a digital signature, RSA system.
 
-![RSA](/sample_app_screens/rsa_signature.png)
+<p align="center">
+  <img src="sample_app_screens/rsa_signature.png" alt="RSA" />
+</p>
 
-7. Window for creating a digital signature, ElGamal system.
+### 7. Window for creating a digital signature, ElGamal system.
 
-![ElGamal](/sample_app_screens/elgamal_signature.png)
+<p align="center">
+  <img src="sample_app_screens/elgamal_signature.png" alt="ElGamal" />
+</p>
 
-8. Window for creating a digital signature, ECDSA system.
+### 8. Window for creating a digital signature, ECDSA system.
 
-![ECDSA](/sample_app_screens/ecdsa_signature.png)
+<p align="center">
+  <img src="sample_app_screens/ecdsa_signature.png" alt="ECDSA" />
+</p>
 
-9. Message window informing the user about a correctly created digital signature for the selected file.
+### 9. Message window informing the user about a correctly created digital signature for the selected file.
 
-![MessageSign](/sample_app_screens/encrypt_page.png)
+<p align="center">
+  <img src="sample_app_screens/encrypt_page.png" alt="MessageSign" />
+</p>
 
-10. Window for verifying the digital signature (1).
+### 10. Window for verifying the digital signature (1).
 
-![Verify1](/sample_app_screens/verify_page_1.png)
+<p align="center">
+  <img src="sample_app_screens/verify_page_1.png" alt="Verify1" />
+</p>
 
-11. Window for verifying the digital signature (2).
+### 11. Window for verifying the digital signature (2).
 
-![Verify2](/sample_app_screens/verify_page_2.png)
+<p align="center">
+  <img src="sample_app_screens/verify_page_2.png" alt="Verify2" />
+</p>
 
-12. Own encryption file extension.
+### 12. Own encryption file extension.
 
-![OwnExt](/sample_app_screens/own_file_extension.png)
+<p align="center">
+  <img src="sample_app_screens/own_file_extension.png" alt="OwnExt" />
+</p>
 
-13. Location to log out of the currently logged in user's account.
+### 13. Location to log out of the currently logged in user's account.
 
-![LogOut](/sample_app_screens/log_out.png)
+<p align="center">
+  <img src="sample_app_screens/log_out.png" alt="LogOut" />
+</p>
