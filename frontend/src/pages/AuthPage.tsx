@@ -153,7 +153,7 @@ const AuthPage: React.FC = () => {
         return;
       }
 
-      const rsa_response = await calculateRsaParallel(1024, 4);
+      const rsa_response = await calculateRsaParallel(2048, 4);
 
       const credentials = {
         login: formData.login,

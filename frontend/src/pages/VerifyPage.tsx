@@ -173,7 +173,7 @@ const VerifyPage = () => {
           type="file"
           ref={fileInputRef}
           onChange={handleFileChange}
-          accept=".ss"
+          accept=".ss,.zip"
           className="hidden"
         />
 
@@ -188,7 +188,7 @@ const VerifyPage = () => {
             <p className="text-center text-sm text-slate-500">
               Click to choose
               <br />
-              <span className="font-bold text-[#0f172a]">SS FILE</span>
+              <span className="font-bold text-[#0f172a]">FILE</span>
             </p>
           </div>
         ) : (
@@ -234,9 +234,9 @@ const VerifyPage = () => {
       </div>
 
       {result && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6">
+        <div className="max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 space-y-6">
           {result.signer !== "Brak danych (Błąd API)" && (
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col w-full mx-auto text-left">
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col w-full text-left">
               <div className="text-left flex flex-col space-y-2">
                 <span className="text-[#0f172a] font-medium text-lg">
                   Signed by: <span className="font-bold">{result.signer}</span>
