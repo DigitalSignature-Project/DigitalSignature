@@ -270,6 +270,8 @@ void ECDSA_generate_keys(ECDSAPublicKey& key_pub, BigInt& key_priv) {
 ECDSASignature ecdsa_sign(const std::string& message, const BigInt& key_priv, std::function<std::vector<uint8_t>(const std::vector<uint8_t>&)> hash_function) {
     RandomGenerator rng;
 
+    const BigInt key_priv_mod = key_priv % Curve::n;
+
     std::vector<uint8_t> messageBytes(message.begin(), message.end());
 
     std::vector<uint8_t> hashedMessage = hash_function(messageBytes);
@@ -300,7 +302,7 @@ ECDSASignature ecdsa_sign(const std::string& message, const BigInt& key_priv, st
 
         BigInt r_R = montgomery_reduce(r * Curve::n_R2(), Curve::n, Curve::nc_inv());
 
-        BigInt d_R = montgomery_reduce(key_priv * Curve::n_R2(), Curve::n, Curve::nc_inv());
+        BigInt d_R = montgomery_reduce(key_priv_mod * Curve::n_R2(), Curve::n, Curve::nc_inv());
 
         BigInt rd_R = montgomery_reduce(r_R * d_R, Curve::n, Curve::nc_inv());
         BigInt s_R = montgomery_reduce(k_inv_R * (z_R + rd_R), Curve::n, Curve::nc_inv());

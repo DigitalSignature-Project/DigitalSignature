@@ -148,7 +148,23 @@ void bind_ecdsa(pybind11::module_ &ecdsa) {
         return digisign::ECDSAPublicKey(digisign::CurvePoint(x, y));}),
         pybind11::arg("x"),
         pybind11::arg("y"))
-    .def_readwrite("key_public", &digisign::ECDSAPublicKey::key_public);
+    .def_readwrite("key_public", &digisign::ECDSAPublicKey::key_public)
+    .def_property("x",
+            [](const digisign::ECDSAPublicKey& self) {
+                return self.key_public.x;
+            },
+            [](digisign::ECDSAPublicKey& self,
+            const digisign::BigInt& x) {
+                self.key_public.x = x;
+        })
+        .def_property("y",
+            [](const digisign::ECDSAPublicKey& self) {
+                return self.key_public.y;
+            },
+            [](digisign::ECDSAPublicKey& self,
+            const digisign::BigInt& y) {
+                self.key_public.y = y;
+        });
 
     pybind11::class_<digisign::ECDSASignature>(ecdsa, "Signature")
     .def(pybind11::init<>())

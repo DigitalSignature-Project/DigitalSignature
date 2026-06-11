@@ -1,7 +1,11 @@
 import { FileText, Check, ShieldAlert, Plus } from "lucide-react";
 import { VerifySignatureBtn } from "../components/VerifySignatureBtn";
 import { useState, useRef } from "react";
-import { verifyRsaSignature, verifyElgamalSignature, verifyEcdsaSignature } from "../services/rsaAPI";
+import {
+  verifyRsaSignature,
+  verifyElgamalSignature,
+  verifyEcdsaSignature,
+} from "../services/rsaAPI";
 import JSZip from "jszip";
 
 const GradientCheck = () => (
@@ -65,7 +69,9 @@ const VerifyPage = () => {
       const originalFileName = signatureInfo.originalFileName;
       const originalFile = zipContents.file(originalFileName);
       if (!originalFile) {
-        throw new Error(`Original file ${originalFileName} not found in archive`);
+        throw new Error(
+          `Original file ${originalFileName} not found in archive`,
+        );
       }
 
       const originalFileContent = await originalFile.async("uint8array");
@@ -85,9 +91,9 @@ const VerifyPage = () => {
           file_content,
           signature,
           login,
-          options.saltLength,
-          options.hashFunction,
-          options.mgf1Hash,
+          options.saltLength.toString(),
+          options.hash_function_1,
+          options.hash_function_2,
         );
         isValid = result.is_valid;
       } else if (algorithm === "ElGamal") {
@@ -95,7 +101,7 @@ const VerifyPage = () => {
           file_content,
           signature,
           login,
-          options.hashFunction,
+          options.hash_function_1,
         );
         isValid = result.is_valid;
       } else if (algorithm === "ECDSA") {
@@ -103,7 +109,7 @@ const VerifyPage = () => {
           file_content,
           signature,
           login,
-          options.hashFunction,
+          options.hash_function_1,
         );
         isValid = result.is_valid;
       } else {

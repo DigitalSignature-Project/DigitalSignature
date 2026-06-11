@@ -1,9 +1,28 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from app.auth import verify_token
-from app.schemas.signature_schemas import RsaSignatureResponse, RsaSignature, VerifyRsaSignature, VerifyRsaSignatureResponse
-from app.core.signature import create_rsa_signature, verify_rsa_signature
-
+from app.schemas.signature_schemas import (
+    RsaSignatureResponse,
+    RsaSignature,
+    VerifyRsaSignature,
+    VerifyRsaSignatureResponse,
+    ElgamalSignatureResponse,
+    ElgamalSignature,
+    VerifyElgamalSignatureResponse,
+    VerifyElgamalSignature,
+    EcdsaSignature,
+    EcdsaSignatureResponse,
+    VerifyEcdsaSignature,
+    VerifyEcdsaSignatureResponse,
+)
+from app.core.signature import (
+    create_rsa_signature,
+    verify_rsa_signature,
+    create_elgamal_signature,
+    verify_elgamal_sign,
+    create_escda_signature,
+    verify_escda_sign,
+)
 
 router = APIRouter(dependencies=[Depends(verify_token)])
 
@@ -18,13 +37,57 @@ async def generate_rsa_signature(data: RsaSignature) -> RsaSignatureResponse:
         data.key_module,
         data.salt_length,
         data.hash_function_1,
-        data.hash_function_2
+        data.hash_function_2,
     )
     return RsaSignatureResponse(signature=signature)
 
 
 @router.post("/verify_rsa_signature", response_model=VerifyRsaSignatureResponse)
 async def verify_rsa_sign(data: VerifyRsaSignature) -> VerifyRsaSignatureResponse:
-    result = await verify_rsa_signature(data.file_content, data.signature, data.login, data.salt_length, data.hash_function_1, data.hash_function_2)
+    result = await verify_rsa_signature(
+        data.file_content,
+        data.signature,
+        data.login,
+        data.salt_length,
+        data.hash_function_1,
+        data.hash_function_2,
+    )
     return VerifyRsaSignatureResponse(is_valid=result)
-    
+
+
+@router.post("/generate_elgamal_signature", response_model=ElgamalSignatureResponse)
+async def generate_elgamal_signature(
+    data: ElgamalSignature,
+) -> ElgamalSignatureResponse:
+    signature = await create_elgamal_signature(
+        data.file_content, data.login, data.hash, data.password
+    )
+    return ElgamalSignatureResponse(signature=signature)
+
+
+@router.post("/verify_elgamal_signature", response_model=VerifyElgamalSignatureResponse)
+async def verify_elgamal_signature(
+    data: VerifyElgamalSignature,
+) -> VerifyElgamalSignatureResponse:
+    result = await verify_elgamal_sign(
+        data.file_content, data.signature, data.login, data.hash
+    )
+    return VerifyElgamalSignatureResponse(is_valid=result)
+
+
+@router.post("/generate_ecdsa_signature", response_model=EcdsaSignatureResponse)
+async def generate_ecdsa_signature(data: EcdsaSignature) -> EcdsaSignatureResponse:
+    signature = await create_escda_signature(
+        data.file_content, data.login, data.password, data.hash
+    )
+    return EcdsaSignatureResponse(signature=signature)
+
+
+@router.post("/verify_ecdsa_signature", response_model=VerifyEcdsaSignatureResponse)
+async def verify_escda_signature(
+    data: VerifyEcdsaSignature,
+) -> VerifyEcdsaSignatureResponse:
+    result = await verify_escda_sign(
+        data.file_content, data.signature, data.login, data.hash
+    )
+    return VerifyEcdsaSignatureResponse(is_valid=result)
