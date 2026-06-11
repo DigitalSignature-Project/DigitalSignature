@@ -76,9 +76,9 @@ export const signInElgamalFile = async (
   file_content: string,
   login: string,
   password: string,
-  encrypted_private_key?: string,
-  key_module?: string,
-  hash?: string,
+  encrypted_private_key: string,
+  key_module: string,
+  hash: string,
 ) => {
   const { data } = await axios.post<SignInFileRsaResponse>(
     "http://127.0.0.1:2138/signature/generate_elgamal_signature",
@@ -160,7 +160,7 @@ export const verifyElgamalSignature = async (
   file_content: string,
   signature: string,
   login: string,
-  hash?: string,
+  hash: string,
 ) => {
   const { data } = await axios.post<VerifyRsaSignatureResponse>(
     "http://127.0.0.1:2138/signature/verify_elgamal_signature",

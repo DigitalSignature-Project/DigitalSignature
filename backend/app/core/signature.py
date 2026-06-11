@@ -64,6 +64,38 @@ async def _fetch_user_keys(login: str) -> dict:
     }
 
 
+async def generate_elgamal_data() -> dict:
+    key_pub = DigiSign.ElGamal.ElGamalPublicKey()
+    key_priv = DigiSign.BigInt()
+    
+    DigiSign.ElGamal.ElGamal_generate_keys_parallel(key_pub, key_priv, 2048, 256, 4)
+    
+    result: dict = {
+        "p_hex": key_pub.p.to_hex(),
+        "q_hex": key_pub.q.to_hex(),
+        "g_hex": key_pub.g.to_hex(),
+        "y_hex": key_pub.y.to_hex(),
+        "key_priv_hex": key_priv.to_hex()
+    }
+    
+    return result
+
+
+async def generate_ecdsa_data() -> dict:
+    key_pub = DigiSign.ECDSA.PublicKey()
+    key_priv = DigiSign.BigInt()
+
+    DigiSign.ECDSA.ecdsa_generate_keys(key_pub, key_priv)
+
+    result: dict = {
+        "x_hex": key_pub.x.to_hex(),
+        "y_hex": key_pub.y.to_hex(),
+        "key_priv_hex": key_priv.to_hex()        
+    }
+    
+    return result
+
+
 async def create_rsa_signature(
     file_content: str,
     login: str,
@@ -122,3 +154,39 @@ async def verify_rsa_signature(
         file_content, signature, public_key, key_module, pss_config
     )
     return result
+
+
+# async def create_elgamal_signature(
+#     file_content: str,
+#     login: str,
+#     password: str,
+#     encrypted_private_key: str,
+#     key_module: str,
+#     hash: str,
+# ) -> str:
+#     match hash:
+#         case "SHA256":
+#             hash_1 = DigiSign.HASH.SHA256
+#         case "SHA3_256":
+#             hash_1 = DigiSign.HASH.SHA3_256
+#         case "SHA3_512":
+#             hash_1 = DigiSign.HASH.SHA3_512
+#         case _:
+#             raise ValueError("Unsupported hash function")
+        
+#     try:
+#         private_key_hex = decrypt(encrypted_private_key, password)
+#     except InvalidTag:
+#         raise HTTPException(status_code=401, detail="Invalid key passphrase")
+        
+#     p = DigiSign.BigInt
+#     q = DigiSign.BigInt
+#     g = DigiSign.BigInt
+#     y = DigiSign.BigInt
+    
+#     public_key = DigiSign.ElGamal.ElGamalPublicKey(p, q, g, y)
+#     private_key = DigiSign.BigInt.from_hex(private_key_hex)
+#     signature = DigiSign.ElGamal.sign(file_content, public_key, private_key, hash_1)
+#     signature = DigiSign.ElGamal.DER_encode_signature_hex(signature)
+#     return signature
+    
