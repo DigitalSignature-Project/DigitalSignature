@@ -34,7 +34,7 @@ const HomePage = () => {
           </div>
           <h2 className="text-2xl font-bold text-[#0f172a] mb-2">Verify Signature</h2>
           <p className="text-slate-500 text-center text-sm">
-            Check the authenticity of the signature and integrity of the file from the SS package.
+            Check the authenticity of the signature and integrity of the file from the package.
           </p>
         </button>
       </div>

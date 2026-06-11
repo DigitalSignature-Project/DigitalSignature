@@ -1,4 +1,4 @@
-import { FileText, Check, ShieldAlert, Plus } from "lucide-react";
+import { FileText, Check, ShieldAlert, Plus, Download } from "lucide-react";
 import { VerifySignatureBtn } from "../components/VerifySignatureBtn";
 import { useState, useRef } from "react";
 import {
@@ -7,6 +7,8 @@ import {
   verifyEcdsaSignature,
 } from "../services/rsaAPI";
 import JSZip from "jszip";
+import { save } from "@tauri-apps/plugin-dialog";
+import { writeFile } from "@tauri-apps/plugin-fs";
 
 const GradientCheck = () => (
   <svg
@@ -32,11 +34,19 @@ type VerifyFileResponse = {
   localDate?: string;
 };
 
+type ExtractedFile = {
+  name: string;
+  data: Uint8Array;
+};
+
 const VerifyPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [result, setResult] = useState<VerifyFileResponse | null>(null);
   const [progress, setProgress] = useState<number>(0);
+  
+  const [extractedFile, setExtractedFile] = useState<ExtractedFile | null>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleVerifySignature = async () => {
@@ -45,6 +55,7 @@ const VerifyPage = () => {
     setLoading(true);
     setResult(null);
     setProgress(0);
+    setExtractedFile(null); 
 
     const progressInterval = setInterval(() => {
       setProgress((p) => {
@@ -76,6 +87,12 @@ const VerifyPage = () => {
       }
 
       const originalFileContent = await originalFile.async("uint8array");
+      
+      setExtractedFile({
+        name: originalFileName,
+        data: originalFileContent,
+      });
+
       const file_content = Array.from(originalFileContent)
         .map((b) => b.toString(16).padStart(2, "0"))
         .join("");
@@ -140,11 +157,32 @@ const VerifyPage = () => {
     }
   };
 
+  const handleDownloadOriginalFile = async () => {
+    if (!extractedFile) return;
+
+    try {
+      const extension = extractedFile.name.substring(extractedFile.name.lastIndexOf(".") + 1);
+      
+      const filePath = await save({
+        defaultPath: extractedFile.name,
+        filters: extension ? [{ name: "Original File", extensions: [extension] }] : undefined,
+      });
+
+      if (filePath) {
+        await writeFile(filePath, extractedFile.data);
+        console.log("File successfully saved to:", filePath);
+      }
+    } catch (error) {
+      console.error("Error saving original file:", error);
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setSelectedFile(e.target.files[0]);
       setResult(null);
       setProgress(0);
+      setExtractedFile(null);
     }
   };
 
@@ -154,6 +192,7 @@ const VerifyPage = () => {
       setSelectedFile(e.dataTransfer.files[0]);
       setResult(null);
       setProgress(0);
+      setExtractedFile(null);
     }
   };
 
@@ -165,7 +204,7 @@ const VerifyPage = () => {
     (bytes / (1024 * 1024)).toFixed(2) + " MB";
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8 pb-[200px]">
       <p className="font-bold text-[#0f172a] text-4xl text-center mt-2">
         Digital signature verification
       </p>
@@ -236,7 +275,7 @@ const VerifyPage = () => {
       </div>
 
       {result && (
-        <div className="max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 space-y-6">
+        <div className="w-full animate-in fade-in slide-in-from-bottom-4 space-y-6">
           {result.signer !== "Brak danych (Błąd API)" && (
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col w-full text-left">
               <div className="text-left flex flex-col space-y-2">
@@ -258,17 +297,29 @@ const VerifyPage = () => {
           )}
 
           <div
-            className={`p-6 rounded-2xl shadow-sm border flex items-center justify-center ${result.isValid ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}
+            className={`p-6 rounded-2xl shadow-sm border flex flex-col items-center justify-center ${result.isValid ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}
           >
             {result.isValid ? (
-              <div className="flex items-center">
-                <GradientCheck />
-                <span className="text-green-800 font-bold text-xl">
-                  File has not been changed since it was signed
-                </span>
+              <div className="flex flex-col items-center w-full">
+                <div className="flex items-center mb-6">
+                  <GradientCheck />
+                  <span className="text-green-800 font-bold text-xl">
+                    File has not been changed since it was signed
+                  </span>
+                </div>
+                
+                {extractedFile && (
+                  <button
+                    onClick={handleDownloadOriginalFile}
+                    className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-sm"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>Download original file ({extractedFile.name})</span>
+                  </button>
+                )}
               </div>
             ) : (
-              <div className="flex items-center">
+              <div className="flex items-center w-full">
                 <ShieldAlert className="w-12 h-12 text-red-600 mr-4" />
                 <div className="flex flex-col">
                   <span className="text-red-600 font-bold text-xl">

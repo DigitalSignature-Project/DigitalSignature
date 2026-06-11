@@ -221,7 +221,7 @@ const EncryptPage = () => {
     (bytes / (1024 * 1024)).toFixed(2) + " MB";
 
 return (
-  <div className="w-full max-w-4xl mx-auto space-y-8">
+  <div className="w-full max-w-4xl mx-auto space-y-8 pb-[200px]">
     <p className="font-bold text-[#0f172a] text-4xl text-center mt-2">
       Encrypt and Sign Your Files
     </p>
@@ -378,7 +378,7 @@ return (
       {!isSigned ? (
         <TempResultSection data={calculated} />
       ) : (
-        <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center p-8 bg-green-50 border border-green-200 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-4">
+        <div className="w-full flex flex-col items-center justify-center p-8 bg-green-50 border border-green-200 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-4">
           <p className="text-2xl font-bold text-green-800 mb-2">
             File Signed Successfully! 🎉
           </p>
