@@ -151,13 +151,15 @@ const EncryptPage = () => {
   const handleDownloadZip = async () => {
     if (!selectedFile || !signatureData) return;
 
-    const zip = new JSZip();
+  const zip = new JSZip();
 
     zip.file(selectedFile.name, selectedFile);
 
+    const now = new Date();
     const metaData = {
       user: login,
-      timestamp: new Date().toISOString(),
+      timestamp: now.toISOString(), 
+      local_timestamp: now.toLocaleString(),
       originalFileName: selectedFile.name,
       algorithm: signatureData.algorithm,
       algorithmOptions: signatureData.options,
