@@ -28,12 +28,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
 
-      - name: Setup VCPKG and Install C++ Libraries
+      - name: Install C++ Libraries using pre-installed VCPKG
         run: |
-          git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
-          cd C:\vcpkg
-          .\bootstrap-vcpkg.bat
-          .\vcpkg install libffi:x64-windows openssl:x64-windows-static pybind11:x64-windows-static
+          C:\vcpkg\vcpkg.exe install libffi:x64-windows openssl:x64-windows-static pybind11:x64-windows-static
         shell: cmd
 
       - name: Compile C++ Backend (Computing Module)
