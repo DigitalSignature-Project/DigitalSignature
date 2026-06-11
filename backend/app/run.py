@@ -21,6 +21,7 @@ app.add_middleware(
         "http://localhost:2138",
         "http://127.0.0.1:2138",
         "tauri://localhost",
+        "http://tauri.localhost",
         "https://tauri.localhost",
     ],
     allow_credentials=True,
